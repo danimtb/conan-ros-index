@@ -1,0 +1,4 @@
+sources:
+  "1.8.0":
+    url: "https://github.com/eclipse-zenoh/zenoh-cpp/archive/refs/tags/1.8.0.tar.gz"
+    sha256: "19f6d29af3711561c4b9caffe64ef0a67602594e2e2f6615b43b9db7133d8313"

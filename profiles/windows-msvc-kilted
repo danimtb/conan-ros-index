@@ -1,0 +1,26 @@
+# Host profile for ros2-kilted (Windows, MSVC).
+# Prereqs: Git, UV (when recipe option py_version is set), MAX_PATH long paths enabled,
+# Visual Studio 2019/2022 Build Tools with MSVC + Windows SDK.
+#
+# Rust/Cargo for packages that invoke cargo at build time (e.g. zenoh-c 1.8.0 pins 1.93 in rust-toolchain.toml).
+# Export once per version you need, e.g.:
+#   conan export recipes/rust/all --version=1.93.0
+
+[settings]
+os=Windows
+arch=x86_64
+build_type=Release
+compiler=msvc
+compiler.cppstd=17
+compiler.runtime=dynamic
+compiler.version=193
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+
+[options]
+# zenoh-c source+cargo build can fail on some Windows setups (build-script rustc spawn). Use upstream MSVC zip.
+zenoh-c/*:upstream_binary=True
+
+[tool_requires]
+rust/1.93.0

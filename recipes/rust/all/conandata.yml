@@ -1,0 +1,10 @@
+# Official standalone bundles: https://forge.rust-lang.org/infra/other-installation-methods.html#standalone
+sources:
+  "1.75.0":
+    Windows_x86_64:
+      url: "https://static.rust-lang.org/dist/rust-1.75.0-x86_64-pc-windows-msvc.tar.gz"
+      sha256: "46fb351d1c33fe501375e3f742fbc98500b12eb2a4f7af6dc203b9be69f1f906"
+  "1.93.0":
+    Windows_x86_64:
+      url: "https://static.rust-lang.org/dist/rust-1.93.0-x86_64-pc-windows-msvc.tar.gz"
+      sha256: "4d171c1a5a0e4b2450b6426be70faa9bf31848362262d4dc8e9b29072e268e43"
