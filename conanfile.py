@@ -13,7 +13,7 @@ import os
 
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration, ConanException
-from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
+from conan.tools.cmake import CMakeDeps, CMakeToolchain
 from conan.tools.env import VirtualBuildEnv
 from conan.tools.files import copy, download, mkdir, replace_in_file, rmdir, save
 from conan.tools.microsoft import VCVars
@@ -32,6 +32,7 @@ PIP_BUILD_TOOLS = (
     "numpy>=1.26,<3",
     "PyYAML>=6,<7",
     "lxml>=5,<6",
+    "lark==1.1.9"
 )
 
 
@@ -47,7 +48,7 @@ class Ros2KiltedConan(ConanFile):
 
     def configure(self):
         if self.settings.os != "Windows":
-            raise ConanInvalidConfiguration("This recipe targets Windows only.")
+            raise ConanInvalidConfiguration("This recipe targets Windows only for now.")
 
     def layout(self):
         # Single-tree colcon workspace: src/, build/, install/, log/ under ros2_ws/
@@ -157,7 +158,7 @@ class Ros2KiltedConan(ConanFile):
             f'colcon build --merge-install '
             f'--cmake-args "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW" "-DUSE_SYSTEM_ZENOH=ON" '
             '--catkin-skip-building-tests '
-            '--packages-up-to fastdds '  # demo_nodes_cpp
+            '--packages-up-to demo_nodes_cpp '  # demo_nodes_cpp
             '--event-handlers console_cohesion+'
         )
         self.run(cmd, env="conanbuild")
@@ -167,10 +168,6 @@ class Ros2KiltedConan(ConanFile):
         if not os.path.isdir(inst):
             raise ConanException(f"No merged install found at {inst}")
         copy(self, "*", src=inst, dst=os.path.join(self.package_folder, "install"))
-
-    def package_id(self):
-        # skip_vcs does not change the graph of built artifacts when sources match.
-        self.info.options.rm_safe("skip_vcs")
 
     def package_info(self):
         install = os.path.join(self.package_folder, "install")
