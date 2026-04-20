@@ -1,0 +1,18 @@
+--- src/ros2/rosidl_python/rosidl_generator_py/cmake/rosidl_generator_py_generate_interfaces.cmake
++++ src/ros2/rosidl_python/rosidl_generator_py/cmake/rosidl_generator_py_generate_interfaces.cmake
+@@ -205,6 +205,15 @@ foreach(_typesupport_impl ${_typesupport_impls})
+   # TODO(sloretz) use target_compile_options when python extension passes -Wpedantic
+   set_target_properties(${_target_name} PROPERTIES COMPILE_OPTIONS "${_extension_compile_flags}")
+ 
++  if(WIN32 AND MSVC)
++    # MSVC C1083 "Cannot open compiler generated file: ''" when the full .obj path
++    # exceeds ~260 chars. VS $(IntDir) stays long; CMAKE_OBJECT_PATH_MAX does not shorten
++    # it for the VS generator on CMake 3.28. Put objects in a short per-package folder.
++    set(_rosidl_py_objdir "${CMAKE_CURRENT_BINARY_DIR}/_pyobj/")
++    file(MAKE_DIRECTORY "${_rosidl_py_objdir}")
++    target_compile_options(${_target_name} PRIVATE "/Fo${_rosidl_py_objdir}")
++  endif()
++
+   set_target_properties(${_target_name} PROPERTIES
+     LIBRARY_OUTPUT_DIRECTORY ${_output_path}
+     RUNTIME_OUTPUT_DIRECTORY ${_output_path})

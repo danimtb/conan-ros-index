@@ -1,0 +1,11 @@
+sources:
+  "0.1.0":
+    url: "https://raw.githubusercontent.com/ros2/ros2/kilted/ros2.repos"
+    sha256: "7e362e761e334250c8e3a278397e634bdcf3d235c39b655a74ff174ab6215525"
+
+patches:
+  "0.1.0":
+    - patch_file: patches/0001-google-benchmark-vendor-conan-shared-benchmark.patch
+      patch_description: google_benchmark_vendor - shared lib check on benchmark::benchmark (Conan)
+    - patch_file: patches/0002-rosidl-generator-py-msvc-short-object-dir.patch
+      patch_description: rosidl_generator_py - MSVC /Fo short dir (MAX_PATH on .obj under VS generator)
