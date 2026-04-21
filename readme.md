@@ -15,6 +15,7 @@ Conan recipes for building and packaging [ROS 2](https://docs.ros.org/) from sou
 ## Dependencies (from this repository)
 
 | Package     | Description                                      |
+| ----------- | ------------------------------------------------ |
 | `zenoh-c` | Eclipse Rust zenoh c library |
 | `zenoh-cpp` | Eclipse C++ wrapper header library for zenoh c |
 | `rust` | Rust/Cargo tool require to build the libraries |
@@ -28,6 +29,12 @@ cd recipes/ros-kilted/all
 conan source recipes/ros-kilted/all --version 0.1.0
 conan build recipes/ros-kilted/all --version 0.1.0 --profile profiles/windows-msvc
 conan export-pkg recipes/ros-kilted/all --version 0.1.0 --profile profiles/windows-msvc  # Executes test_package too
+```
+
+Finally, create the package:
+
+```
+conan create recipes/ros-kilted/all --version 0.1.0 --profile profiles/windows-msvc
 ```
 
 ## Usage

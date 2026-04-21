@@ -1,18 +1,27 @@
 --- src/ros2/rosidl_python/rosidl_generator_py/cmake/rosidl_generator_py_generate_interfaces.cmake
 +++ src/ros2/rosidl_python/rosidl_generator_py/cmake/rosidl_generator_py_generate_interfaces.cmake
-@@ -205,6 +205,15 @@ foreach(_typesupport_impl ${_typesupport_impls})
-   # TODO(sloretz) use target_compile_options when python extension passes -Wpedantic
-   set_target_properties(${_target_name} PROPERTIES COMPILE_OPTIONS "${_extension_compile_flags}")
+@@ -232,7 +232,24 @@ foreach(_typesupport_impl ${_typesupport_impls})
+   add_dependencies(${_target_name}
+     ${rosidl_generate_interfaces_TARGET}__${_typesupport_impl}
+   )
  
 +  if(WIN32 AND MSVC)
-+    # MSVC C1083 "Cannot open compiler generated file: ''" when the full .obj path
-+    # exceeds ~260 chars. VS $(IntDir) stays long; CMAKE_OBJECT_PATH_MAX does not shorten
-+    # it for the VS generator on CMake 3.28. Put objects in a short per-package folder.
-+    set(_rosidl_py_objdir "${CMAKE_CURRENT_BINARY_DIR}/_pyobj/")
++    # ros-kilted: MSVC py _pyobj dir for /Fo - long VS IntDir under Conan cache hits MAX_PATH
++    # Apply after all target_link_libraries so INTERFACE flags (e.g. introspection) cannot
++    # override this. string(SHA1 <out-var> <input>) order matters.
++    # Omit /Fd: long /Fo+/Fd with introspection's include graph can yield C1083 '' on cl.
++    # Bind /Fo to the generated .c via SOURCE COMPILE_OPTIONS so vcxproj ClCompile stays well-formed.
++    set(_rosidl_py_objdir "${CMAKE_CURRENT_BINARY_DIR}/_pyobj")
 +    file(MAKE_DIRECTORY "${_rosidl_py_objdir}")
-+    target_compile_options(${_target_name} PRIVATE "/Fo${_rosidl_py_objdir}")
++    string(SHA1 _rosidl_py_obj_h "${_target_name}")
++    string(SUBSTRING "${_rosidl_py_obj_h}" 0 16 _rosidl_py_obj_h16)
++    set(_rosidl_py_objfile "${_rosidl_py_objdir}/o_${_rosidl_py_obj_h16}.obj")
++    file(TO_CMAKE_PATH "${_rosidl_py_objfile}" _rosidl_py_obj_fo)
++    set_source_files_properties(
++      ${_generated_extension_${_typesupport_impl}_files}
++      PROPERTIES COMPILE_OPTIONS "/Fo${_rosidl_py_obj_fo}")
 +  endif()
 +
-   set_target_properties(${_target_name} PROPERTIES
-     LIBRARY_OUTPUT_DIRECTORY ${_output_path}
-     RUNTIME_OUTPUT_DIRECTORY ${_output_path})
+   if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
+     # PYTHON_INSTALL_DIR is defined by ament_cmake_python
+     install(TARGETS ${_target_name}

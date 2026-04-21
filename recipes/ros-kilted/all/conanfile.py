@@ -324,7 +324,6 @@ class Ros2KiltedConan(ConanFile):
         if os.path.isdir(src_dir):
             rmdir(self, src_dir)
         mkdir(self, src_dir)
-        repos = os.path.join(self.source_folder, "ros2.repos")
         self.run(f'vcs import --input "{repos}" src', cwd=self.source_folder, env="conanbuild")
         apply_conandata_patches(self)
 
