@@ -291,7 +291,6 @@ class Ros2KiltedConan(ConanFile):
         # Re-enable by: uncomment zenoh-c/zenoh-cpp requires, USE_SYSTEM_ZENOH,
         # and the matching --packages-ignore entries in build().
         # tc.cache_variables["USE_SYSTEM_ZENOH"] = True
-        tc.cache_variables["CMAKE_BUILD_TYPE"] = str(self.settings.build_type)
         # MSVC path limit (~260) vs deep Conan build dirs + long rosidl names.
         if self.settings.os == "Windows":
             tc.cache_variables["CMAKE_OBJECT_PATH_MAX"] = 220
@@ -313,13 +312,7 @@ class Ros2KiltedConan(ConanFile):
         cmakedeps.set_property("asio", "cmake_file_name", "Asio")
         cmakedeps.generate()
         VCVars(self).generate()
-        # Export CMAKE_TOOLCHAIN_FILE so colcon-spawned cmake picks it up via env.
-        vbe = VirtualBuildEnv(self)
-        toolchain_file = os.path.join(
-            self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
-        vbe.environment().define("CMAKE_TOOLCHAIN_FILE", toolchain_file)
-        vbe.environment().define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW")
-        vbe.generate()
+        VirtualBuildEnv(self).generate()
 
     def _patch_conan_toolchain_cmp0091_early(self):
         """Conan's vs_runtime block runs cmake_policy(GET CMP0091) before variables set the default.
@@ -359,11 +352,17 @@ class Ros2KiltedConan(ConanFile):
         apply_conandata_patches(self)
 
     def build(self):
-        # colcon picks up CMAKE_TOOLCHAIN_FILE from the VBE env var.
-        # --packages-ignore skips zenoh (Rust crates; flaky on macOS 26).
+        # Pass the Conan toolchain to each colcon-invoked cmake via -D. The
+        # leading space inside the value is required by colcon-cmake's
+        # argparse (-D... otherwise read as a new flag; `type=str.lstrip`
+        # strips it).
+        # --packages-ignore skips zenoh (Rust crates; flaky on macOS 26);
         # rclcpp works fine with the default rmw_fastrtps_cpp.
+        toolchain_file = os.path.join(
+            self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
         cmd = (
-            'colcon build --merge-install '
+            f'colcon build --merge-install '
+            f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
             '--catkin-skip-building-tests '
             '--packages-up-to rclcpp '
             '--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp '
