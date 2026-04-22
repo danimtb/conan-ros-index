@@ -316,13 +316,16 @@ class Ros2KiltedConan(ConanFile):
         replace_in_file(self, path, block, injection, strict=True)
 
     def source(self):
+        pyenv = PyEnv(self, folder=self.source_folder)
+        pyenv.install(["setuptools==68.1.2", "vcstool==0.3.0"])
         repos = os.path.join(self.source_folder, "ros2.repos")
         download(self, **self.conan_data["sources"][str(self.version)], filename=repos)
         src_dir = os.path.join(self.source_folder, "src")
         if os.path.isdir(src_dir):
             rmdir(self, src_dir)
         mkdir(self, src_dir)
-        self.run(f'vcs import --input "{repos}" src', cwd=self.source_folder, env="conanbuild")
+        vcs_path = os.path.join(pyenv.env_dir, "Scripts", "vcs")
+        self.run(f'{vcs_path} import --input "{repos}" src', cwd=self.source_folder, env="conanbuild")
         apply_conandata_patches(self)
 
     def build(self):
