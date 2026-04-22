@@ -295,6 +295,7 @@ class Ros2KiltedConan(ConanFile):
         ).replace("\\", "/")
         vbe.environment().define("CMAKE_TOOLCHAIN_FILE", toolchain_file)
         vbe.environment().define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW")
+        vbe.environment().define("ROS_DISTRO", "kilted")
         vbe.generate()
 
     def _patch_conan_toolchain_cmp0091_early(self):
