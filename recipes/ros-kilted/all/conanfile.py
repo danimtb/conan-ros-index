@@ -110,8 +110,6 @@ from conan.tools.microsoft import VCVars
 from conan.tools.system import PyEnv
 
 
-ROS2_REPOS_URL = "https://raw.githubusercontent.com/ros2/ros2/kilted/ros2.repos"
-
 # Pip mirror of ros2/ros2 kilted pixi.toml [dependencies]: colcon-* uses same bounds as
 # pixi; everything else uses pixi == pins (PyPI names). Omitted: pip (UV), git (system), rust
 # (Conan tool_requires; newer than pixi for zenoh — see profile).
@@ -196,7 +194,7 @@ PIP_BUILD_TOOLS = (
 class Ros2KiltedConan(ConanFile):
     name = "ros-kilted"
     version = "0.1.0"
-    provides = "ros2"
+    provides = "ros"  # To avoid name conflicts with other ros packages: ros-rolling, ros-humble, etc.
     exports_sources = "conandata.yml", "patches/*"
     # package_type = "library"  # TODO: which is the best type?
     license = "Apache-2.0"
@@ -297,6 +295,7 @@ class Ros2KiltedConan(ConanFile):
         ).replace("\\", "/")
         vbe.environment().define("CMAKE_TOOLCHAIN_FILE", toolchain_file)
         vbe.environment().define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW")
+        vbe.environment().define("ROS_DISTRO", "kilted")
         vbe.generate()
 
     def _patch_conan_toolchain_cmp0091_early(self):
@@ -318,19 +317,23 @@ class Ros2KiltedConan(ConanFile):
         replace_in_file(self, path, block, injection, strict=True)
 
     def source(self):
+        pyenv = PyEnv(self, folder=self.source_folder)
+        pyenv.install(["setuptools==68.1.2", "vcstool==0.3.0"])
         repos = os.path.join(self.source_folder, "ros2.repos")
         download(self, **self.conan_data["sources"][str(self.version)], filename=repos)
         src_dir = os.path.join(self.source_folder, "src")
         if os.path.isdir(src_dir):
             rmdir(self, src_dir)
         mkdir(self, src_dir)
-        self.run(f'vcs import --input "{repos}" src', cwd=self.source_folder, env="conanbuild")
+        vcs_path = os.path.join(pyenv.env_dir, "Scripts", "vcs")
+        self.run(f'{vcs_path} import --input "{repos}" src', cwd=self.source_folder, env="conanbuild")
         apply_conandata_patches(self)
 
     def build(self):
         cmd = (
             f'colcon build --merge-install '
-            f'--cmake-args "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW" "-DUSE_SYSTEM_ZENOH=ON" '
+            '--cmake-args="-DCMAKE_POLICY_DEFAULT_CMP0091=NEW" '
+            '--cmake-args="-DUSE_SYSTEM_ZENOH=ON" '
             '--catkin-skip-building-tests '
             '--packages-up-to rclcpp '  # rclcpp, demo_nodes_cpp, type_description_interfaces
             '--event-handlers console_cohesion+'
@@ -370,3 +373,13 @@ class Ros2KiltedConan(ConanFile):
 
         # Consumers often use local_setup.bat; document path.
         self.conf_info.define_path("user.ros2:install_prefix", install)
+        setup_script_path = os.path.join(install, "setup")
+        setup_script_path_sh = setup_script_path + ".sh"
+        setup_script_path_bat = setup_script_path + ".bat"
+        setup_script_path_ps1 = setup_script_path + ".ps1"
+        self.output.info(f"[bash] Setup the ROS Kilted environment: 'source {setup_script_path_sh}'")
+        self.output.info(f"[batch] Setup the ROS Kilted environment: 'call {setup_script_path_bat}'")
+        self.output.info(f"[powershell] Setup the ROS Kilted environment: '. {setup_script_path_ps1}'")
+        self.conf_info.define_path("user.ros2:setup_sh", setup_script_path_sh)
+        self.conf_info.define_path("user.ros2:setup_bat", setup_script_path_bat)
+        self.conf_info.define_path("user.ros2:setup_ps1", setup_script_path_ps1)
