@@ -110,8 +110,6 @@ from conan.tools.microsoft import VCVars
 from conan.tools.system import PyEnv
 
 
-ROS2_REPOS_URL = "https://raw.githubusercontent.com/ros2/ros2/kilted/ros2.repos"
-
 # Pip mirror of ros2/ros2 kilted pixi.toml [dependencies]: colcon-* uses same bounds as
 # pixi; everything else uses pixi == pins (PyPI names). Omitted: pip (UV), git (system), rust
 # (Conan tool_requires; newer than pixi for zenoh — see profile).
@@ -196,7 +194,7 @@ PIP_BUILD_TOOLS = (
 class Ros2KiltedConan(ConanFile):
     name = "ros-kilted"
     version = "0.1.0"
-    provides = "ros2"
+    provides = "ros"  # To avoid name conflicts with other ros packages: ros-rolling, ros-humble, etc.
     exports_sources = "conandata.yml", "patches/*"
     # package_type = "library"  # TODO: which is the best type?
     license = "Apache-2.0"
@@ -282,7 +280,7 @@ class Ros2KiltedConan(ConanFile):
         tc.variables["CMAKE_POLICY_DEFAULT_CMP0091"] = "NEW"
         tc.variables["USE_SYSTEM_ZENOH"] = True
         tc.generate()
-        self._patch_conan_toolchain_cmp0091_early()
+        #self._patch_conan_toolchain_cmp0091_early()
         cmakedeps = CMakeDeps(self)
         cmakedeps.set_property("tinyxml2", "cmake_file_name", "TinyXML2")
         cmakedeps.set_property("tinyxml2", "cmake_extra_variables", {"TINYXML2_LIBRARY": "tinyxml2::tinyxml2"})
@@ -370,3 +368,13 @@ class Ros2KiltedConan(ConanFile):
 
         # Consumers often use local_setup.bat; document path.
         self.conf_info.define_path("user.ros2:install_prefix", install)
+        setup_script_path = os.path.join(install, "setup")
+        setup_script_path_sh = setup_script_path + ".sh"
+        setup_script_path_bat = setup_script_path + ".bat"
+        setup_script_path_ps1 = setup_script_path + ".ps1"
+        self.output.info(f"[bash] Setup the ROS Kilted environment: 'source {setup_script_path_sh}'")
+        self.output.info(f"[batch] Setup the ROS Kilted environment: 'call {setup_script_path_bat}'")
+        self.output.info(f"[powershell] Setup the ROS Kilted environment: '. {setup_script_path_ps1}'")
+        self.conf_info.define_path("user.ros2.setup_sh", setup_script_path_sh)
+        self.conf_info.define_path("user.ros2.setup_bat", setup_script_path_bat)
+        self.conf_info.define_path("user.ros2.setup_ps1", setup_script_path_ps1)
