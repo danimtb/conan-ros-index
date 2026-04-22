@@ -21,7 +21,7 @@ class TestPackageConan(ConanFile):
         self.tool_requires("cmake/[>=3.28 <4]")
 
     def _inject_setup_script(self, script_name):
-        ros = self.dependencies["ros2-kilted"]
+        ros = self.dependencies["ros-kilted"]
         setup_script_path = os.path.join(ros.package_folder, "install", "setup.bat")
         load(self, setup_script_path)
         conanbuild_path = os.path.join(self.generators_folder, f"{script_name}.bat")
