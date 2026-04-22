@@ -331,7 +331,7 @@ class Ros2KiltedConan(ConanFile):
     def build(self):
         cmd = (
             f'colcon build --merge-install '
-            f'--cmake-args "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW" --cmake-args "-DUSE_SYSTEM_ZENOH=ON" '
+            f'--cmake-args="-DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DUSE_SYSTEM_ZENOH=ON" '
             '--catkin-skip-building-tests '
             '--packages-up-to rclcpp '  # rclcpp, demo_nodes_cpp, type_description_interfaces
             '--event-handlers console_cohesion+'
