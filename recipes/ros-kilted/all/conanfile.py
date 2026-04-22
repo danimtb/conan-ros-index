@@ -280,7 +280,7 @@ class Ros2KiltedConan(ConanFile):
         tc.variables["CMAKE_POLICY_DEFAULT_CMP0091"] = "NEW"
         tc.variables["USE_SYSTEM_ZENOH"] = True
         tc.generate()
-        #self._patch_conan_toolchain_cmp0091_early()
+        self._patch_conan_toolchain_cmp0091_early()
         cmakedeps = CMakeDeps(self)
         cmakedeps.set_property("tinyxml2", "cmake_file_name", "TinyXML2")
         cmakedeps.set_property("tinyxml2", "cmake_extra_variables", {"TINYXML2_LIBRARY": "tinyxml2::tinyxml2"})
