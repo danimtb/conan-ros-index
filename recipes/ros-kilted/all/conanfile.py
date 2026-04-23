@@ -312,7 +312,7 @@ class Ros2KiltedConan(ConanFile):
         VCVars(self).generate()
         vbe = VirtualBuildEnv(self)
         vbe.environment().define("ROS_DISTRO", "kilted")
-        vbe(self).generate()
+        vbe.generate()
 
     def _patch_conan_toolchain_cmp0091_early(self):
         """Conan's vs_runtime block runs cmake_policy(GET CMP0091) before variables set the default.
