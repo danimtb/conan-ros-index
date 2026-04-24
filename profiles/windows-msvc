@@ -13,7 +13,7 @@ build_type=Release
 compiler=msvc
 compiler.cppstd=17
 compiler.runtime=dynamic
-compiler.version=193
+compiler.version=194
 
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja

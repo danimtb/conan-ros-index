@@ -110,8 +110,6 @@ from conan.tools.microsoft import VCVars
 from conan.tools.system import PyEnv
 
 
-ROS2_REPOS_URL = "https://raw.githubusercontent.com/ros2/ros2/kilted/ros2.repos"
-
 # Pip mirror of ros2/ros2 kilted pixi.toml [dependencies]: colcon-* uses same bounds as
 # pixi; everything else uses pixi == pins (PyPI names). Omitted: pip (UV), git (system), rust
 # (Conan tool_requires; newer than pixi for zenoh — see profile).
@@ -169,8 +167,14 @@ PIP_BUILD_TOOLS = (
     "pyflakes==3.2.0",
     #"pygraphviz==1.11",
     "pyparsing==3.1.1",
-    "PyQt5==5.15.9",
-    "PyQt5-sip==12.12.2",
+    # PyQt5 / PyQt5-sip are only needed by rqt_* GUI packages. They are NOT
+    # in the --packages-up-to rclcpp subset we build, and installing them
+    # from pip triggers a from-source PyQt5 build that requires qmake (Qt's
+    # build tool) on the host. On macOS without Qt installed that fails with
+    # `PyProjectOptionException('qmake', ...)`. Re-enable only when the recipe
+    # scales up to packages that genuinely need them.
+    # "PyQt5==5.15.9",
+    # "PyQt5-sip==12.12.2",
     "pytest==7.4.4",
     "pytest-cov==4.1.0",
     "pytest-mock==3.12.0",
@@ -196,7 +200,7 @@ PIP_BUILD_TOOLS = (
 class Ros2KiltedConan(ConanFile):
     name = "ros-kilted"
     version = "0.1.0"
-    provides = "ros2"
+    provides = "ros"  # To avoid name conflicts with other ros packages: ros-rolling, ros-humble, etc.
     exports_sources = "conandata.yml", "patches/*"
     # package_type = "library"  # TODO: which is the best type?
     license = "Apache-2.0"
@@ -241,16 +245,18 @@ class Ros2KiltedConan(ConanFile):
         self.requires("bullet3/3.25")
         self.requires("cunit/2.1-3")
         self.requires("libyaml/0.2.5")
-        self.requires("zenoh-c/1.8.0")
-        self.requires("zenoh-cpp/1.8.0")
+        #self.requires("zenoh-c/1.8.0")
+        #self.requires("zenoh-cpp/1.8.0")
         self.requires("pybind11/2.11.1")
 
     def build_requirements(self):
         self.tool_requires("cmake/3.28.5")
         # self.tool_requires("cppcheck/2.15.0")  # see requirements() comment: missing binary for profile
         self.tool_requires("uncrustify/0.78.1")
-        # 7zip: pixi build tooling; ConanCenter ships 7z.exe on PATH for Windows x86_64.
-        self.tool_requires("7zip/23.01")
+        # 7zip: pixi build tooling. ConanCenter ships 7z.exe only for Windows,
+        # and on Linux/macOS the system `tar` already covers extraction needs.
+        if self.settings.os == "Windows":
+            self.tool_requires("7zip/23.01")
 
     def generate(self):
         pyenv = PyEnv(self)
@@ -263,24 +269,39 @@ class Ros2KiltedConan(ConanFile):
         py_root = pyenv.env_dir.replace("\\", "/")
 
         tc = CMakeToolchain(self)
+        # Clang 15+/Apple Clang 21 enforce C++23 rules that asio 1.28.1 and
+        # FastDDS 3.2.3 still trip on. -Wno-error=<tag> downgrades each to a
+        # warning but keeps it visible; plain -Wno-<tag> would be re-enabled
+        # by the `-Wall` that fastdds/cyclonedds append later in their own
+        # target_compile_options.
+        if self.settings.compiler in ("apple-clang", "clang"):
+            tc.extra_cxxflags.extend([
+                "-Wno-error=deprecated-literal-operator",  # asio operator"" _buf
+                "-Wno-error=nonnull",                      # FastDDS TypeObjectRegistry.cpp
+            ])
         tc.cache_variables["BUILD_TESTING"] = False
         tc.cache_variables["Python3_ROOT_DIR"] = pyenv.env_dir
         tc.cache_variables["Python3_EXECUTABLE"] = pyenv.env_exe
         tc.cache_variables["Python_ROOT_DIR"] = pyenv.env_dir
         tc.cache_variables["Python_EXECUTABLE"] = pyenv.env_exe
         tc.cache_variables["CMAKE_POLICY_DEFAULT_CMP0091"] = "NEW"
-        tc.cache_variables["USE_SYSTEM_ZENOH"] = True
-        # Deep Conan build dirs + long rosidl Python extension names exceed MSVC's
-        # practical path limit (~260); object paths then fail as C1083 with '' filename.
+        # Zenoh RMW is disabled: its rust/cargo pipeline is flaky on macOS 26.
+        # Re-enable by: uncomment zenoh-c/zenoh-cpp requires, USE_SYSTEM_ZENOH,
+        # and the matching --packages-ignore entries in build().
+        # tc.cache_variables["USE_SYSTEM_ZENOH"] = True
+        # MSVC path limit (~260) vs deep Conan build dirs + long rosidl names.
         if self.settings.os == "Windows":
             tc.cache_variables["CMAKE_OBJECT_PATH_MAX"] = 220
             tc.variables["CMAKE_OBJECT_PATH_MAX"] = 220
+        # Duplicated into tc.variables because colcon invokes cmake directly
+        # (no CMakePresets), so it only sees what lands in conan_toolchain.cmake.
         tc.variables["Python3_ROOT_DIR"] = py_root
         tc.variables["Python3_EXECUTABLE"] = py_exe
         tc.variables["Python_ROOT_DIR"] = py_root
         tc.variables["Python_EXECUTABLE"] = py_exe
         tc.variables["CMAKE_POLICY_DEFAULT_CMP0091"] = "NEW"
-        tc.variables["USE_SYSTEM_ZENOH"] = True
+        # tc.variables["USE_SYSTEM_ZENOH"] = True
+        tc.variables["CMAKE_BUILD_TYPE"] = str(self.settings.build_type)
         tc.generate()
         self._patch_conan_toolchain_cmp0091_early()
         cmakedeps = CMakeDeps(self)
@@ -290,13 +311,7 @@ class Ros2KiltedConan(ConanFile):
         cmakedeps.generate()
         VCVars(self).generate()
         vbe = VirtualBuildEnv(self)
-        # CMake honors CMAKE_TOOLCHAIN_FILE from the environment when not passed on the command
-        # line; colcon-spawned cmake inherits conanbuild and still loads Conan’s toolchain + Python.
-        toolchain_file = os.path.abspath(
-            os.path.join(self.generators_folder, CMakeToolchain.filename)
-        ).replace("\\", "/")
-        vbe.environment().define("CMAKE_TOOLCHAIN_FILE", toolchain_file)
-        vbe.environment().define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW")
+        vbe.environment().define("ROS_DISTRO", "kilted")
         vbe.generate()
 
     def _patch_conan_toolchain_cmp0091_early(self):
@@ -318,21 +333,41 @@ class Ros2KiltedConan(ConanFile):
         replace_in_file(self, path, block, injection, strict=True)
 
     def source(self):
+        pyenv = PyEnv(self, folder=self.source_folder)
+        pyenv.install(["setuptools==68.1.2", "vcstool==0.3.0"])
         repos = os.path.join(self.source_folder, "ros2.repos")
         download(self, **self.conan_data["sources"][str(self.version)], filename=repos)
         src_dir = os.path.join(self.source_folder, "src")
         if os.path.isdir(src_dir):
             rmdir(self, src_dir)
         mkdir(self, src_dir)
-        self.run(f'vcs import --input "{repos}" src', cwd=self.source_folder, env="conanbuild")
+
+        # Bootstrap a minimal PyEnv for `vcs`; the main PyEnv in generate()
+        # runs too late. setuptools<80 is pinned because vcstool 0.3.0 still
+        # imports pkg_resources (removed in setuptools 80).
+        boot_folder = os.path.join(self.source_folder, ".bootstrap")
+        boot = PyEnv(self, folder=boot_folder, name="vcs")
+        boot.install(["setuptools<80", "vcstool"])
+        vcs_exe = os.path.join(boot.bin_path, "vcs")
+        self.run(f'"{vcs_exe}" import --input "{repos}" src',
+                 cwd=self.source_folder)
         apply_conandata_patches(self)
 
     def build(self):
+        # Pass the Conan toolchain to each colcon-invoked cmake via -D. The
+        # leading space inside the value is required by colcon-cmake's
+        # argparse (-D... otherwise read as a new flag; `type=str.lstrip`
+        # strips it).
+        # --packages-ignore skips zenoh (Rust crates; flaky on macOS 26);
+        # rclcpp works fine with the default rmw_fastrtps_cpp.
+        toolchain_file = os.path.join(
+            self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
         cmd = (
             f'colcon build --merge-install '
-            f'--cmake-args "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW" "-DUSE_SYSTEM_ZENOH=ON" '
+            f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
             '--catkin-skip-building-tests '
-            '--packages-up-to rclcpp '  # rclcpp, demo_nodes_cpp, type_description_interfaces
+            '--packages-up-to rclcpp '
+            '--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp '
             '--event-handlers console_cohesion+'
         )
         self.run(cmd, env="conanbuild")
@@ -370,3 +405,13 @@ class Ros2KiltedConan(ConanFile):
 
         # Consumers often use local_setup.bat; document path.
         self.conf_info.define_path("user.ros2:install_prefix", install)
+        setup_script_path = os.path.join(install, "setup")
+        setup_script_path_sh = setup_script_path + ".sh"
+        setup_script_path_bat = setup_script_path + ".bat"
+        setup_script_path_ps1 = setup_script_path + ".ps1"
+        self.output.info(f"[bash] Setup the ROS Kilted environment: 'source {setup_script_path_sh}'")
+        self.output.info(f"[batch] Setup the ROS Kilted environment: 'call {setup_script_path_bat}'")
+        self.output.info(f"[powershell] Setup the ROS Kilted environment: '. {setup_script_path_ps1}'")
+        self.conf_info.define_path("user.ros2:setup_sh", setup_script_path_sh)
+        self.conf_info.define_path("user.ros2:setup_bat", setup_script_path_bat)
+        self.conf_info.define_path("user.ros2:setup_ps1", setup_script_path_ps1)

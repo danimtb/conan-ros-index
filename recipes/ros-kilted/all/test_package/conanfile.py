@@ -22,10 +22,21 @@ class TestPackageConan(ConanFile):
 
     def _inject_setup_script(self, script_name):
         ros = self.dependencies["ros-kilted"]
-        setup_script_path = os.path.join(ros.package_folder, "install", "setup.bat")
-        load(self, setup_script_path)
-        conanbuild_path = os.path.join(self.generators_folder, f"{script_name}.bat")
-        conanbuild_content = load(self, conanbuild_path) + "\ncall " + setup_script_path
+        is_windows = self.settings.os == "Windows"
+        if is_windows:
+            setup_script_path = os.path.join(ros.package_folder, "install", "setup.bat")
+            conanbuild_path = os.path.join(self.generators_folder, f"{script_name}.bat")
+            invocation = f"\ncall {setup_script_path}"
+        else:
+            setup_script_path = os.path.join(ros.package_folder, "install", "setup.sh")
+            conanbuild_path = os.path.join(self.generators_folder, f"{script_name}.sh")
+            # `.` (dot) is POSIX-portable; `source` is bash/zsh-specific
+            invocation = f"\n. {setup_script_path}"
+        if not os.path.isfile(setup_script_path):
+            raise FileNotFoundError(
+                f"ROS setup script not found at {setup_script_path}. "
+                f"Expected it inside the ros-kilted package folder.")
+        conanbuild_content = load(self, conanbuild_path) + invocation
         save(self, conanbuild_path, conanbuild_content)
 
     def build(self):
