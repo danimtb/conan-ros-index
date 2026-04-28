@@ -50,6 +50,5 @@ jobs:
         run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing -s compiler.cppstd=17
 
       - name: Run examples (ci-commands.sh in each example folder)
-        working-directory: ${{ github.workspace }}
         shell: bash
-        run: bash .github/workflows/run-example-tests.sh
+        run: bash "${{ github.workspace }}/.github/workflows/run-example-tests.sh"
