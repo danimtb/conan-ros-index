@@ -6,7 +6,6 @@ from conan.tools.cmake import CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.ros import ROSEnv
 from conan.tools.microsoft import VCVars
 from conan.tools.files import load, save
-from conan.tools.layout import basic_layout
 
 
 class ConsumerColconCppConan(ConanFile):
@@ -19,10 +18,11 @@ class ConsumerColconCppConan(ConanFile):
         cmake_layout(self)
 
     def requirements(self):
-        self.requires("ros2-kilted/0.1.0")
+        self.requires("ros-kilted/0.1.0")
+        #opencv
 
     def _inject_setup_script(self, script_name):
-        ros = self.dependencies["ros2-kilted"]
+        ros = self.dependencies["ros-kilted"]
         is_windows = self.settings.os == "Windows"
         if is_windows:
             setup_script_path = os.path.join(ros.package_folder, "install", "setup.bat")

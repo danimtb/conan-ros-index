@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: Apache-2.0
-
 name: Conan create ros-kilted
 
 on:
@@ -7,9 +5,14 @@ on:
 
 jobs:
   conan-create:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Enable long paths for git
+        if: runner.os == 'Windows'
         run: git config --global core.longpaths true
 
       - uses: actions/checkout@v4
@@ -44,4 +47,9 @@ jobs:
 
       - name: Conan create
         working-directory: ${{ github.workspace }}
-        run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing --profile=profiles/windows-msvc
+        run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing
+
+      - name: Run examples (ci-commands.sh in each example folder)
+        working-directory: ${{ github.workspace }}
+        shell: bash
+        run: bash scripts/ci/run-example-tests.sh
