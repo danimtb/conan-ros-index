@@ -91,7 +91,6 @@
 # ------------------------------------------------------------------------------
 
 import os
-import subprocess
 import sys
 
 from conan import ConanFile

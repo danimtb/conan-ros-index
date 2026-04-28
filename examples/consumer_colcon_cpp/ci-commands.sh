@@ -6,7 +6,7 @@ set -x
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 python -m pip install -q --upgrade pip colcon-common-extensions
-conan install . --output-folder=build -s build_type=Release -s compiler.cppstd=17 --build=missing
+conan install -s compiler.cppstd=17 --build=missing
 
 g=""
 for d in build/build/generators build/Release/generators build/Debug/generators build/generators; do
