@@ -51,4 +51,5 @@ jobs:
 
       - name: Run examples (ci-commands.sh in each example folder)
         shell: bash
+        working-directory: ${{ github.workspace }}
         run: bash "${{ github.workspace }}/.github/workflows/run-example-tests.sh"
