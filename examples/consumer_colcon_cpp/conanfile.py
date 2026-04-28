@@ -19,7 +19,6 @@ class ConsumerColconCppConan(ConanFile):
 
     def requirements(self):
         self.requires("ros-kilted/0.1.0")
-        #opencv
 
     def _inject_setup_script(self, script_name):
         ros = self.dependencies["ros-kilted"]
