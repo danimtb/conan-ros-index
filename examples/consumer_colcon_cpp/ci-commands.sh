@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CI for this example; see scripts/ci/run-example-tests.sh and readme.md.
+# CI for this example; see .github/workflows/run-example-tests.sh and readme.md.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 

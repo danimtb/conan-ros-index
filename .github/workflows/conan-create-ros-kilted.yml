@@ -52,4 +52,4 @@ jobs:
       - name: Run examples (ci-commands.sh in each example folder)
         working-directory: ${{ github.workspace }}
         shell: bash
-        run: bash scripts/ci/run-example-tests.sh
+        run: bash .github/workflows/run-example-tests.sh
