@@ -20,7 +20,7 @@ jobs:
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v2.2
         with:
-          cmake-version: "4.2.3"
+          cmake-version: "3.31.0"
 
       - name: Set up Python
         id: setup_python

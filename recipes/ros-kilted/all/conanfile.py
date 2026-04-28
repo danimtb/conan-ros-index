@@ -363,12 +363,12 @@ class Ros2KiltedConan(ConanFile):
         toolchain_file = os.path.join(
             self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
         cmd = (
-            f'colcon build --merge-install '
-            f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
-            '--catkin-skip-building-tests '
-            '--packages-up-to rclcpp '
-            '--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp '
-            '--event-handlers console_cohesion+'
+            "colcon build --merge-install "
+            f"--cmake-args='-DCMAKE_TOOLCHAIN_FILE={toolchain_file}' "
+            "--catkin-skip-building-tests "
+            "--packages-up-to rclcpp "
+            "--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp "
+            "--event-handlers console_cohesion+"
         )
         self.run(cmd, env="conanbuild")
 
