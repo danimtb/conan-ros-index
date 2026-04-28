@@ -2,6 +2,8 @@
 # Discover and run each example's ci-commands.sh (repo-local test entrypoints).
 # CI: invoked with an absolute path (see conan-create-ros-kilted.yml). Local: run from repo root or pass absolute path.
 set -euo pipefail
+export PS4='+ ${BASH_SOURCE[0]}:${LINENO}: '
+set -x
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"

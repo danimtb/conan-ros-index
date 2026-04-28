@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # CI for this example; see .github/workflows/run-example-tests.sh and readme.md.
 set -euo pipefail
+export PS4='+ ${BASH_SOURCE[0]}:${LINENO}: '
+set -x
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 python -m pip install -q --upgrade pip colcon-common-extensions

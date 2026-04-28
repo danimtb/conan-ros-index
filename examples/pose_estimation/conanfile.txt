@@ -3,6 +3,12 @@ ros-kilted/0.1.0
 tensorflow-lite/2.12.0
 opencv/4.5.5
 
+# OpenCV 4.5.5 + FFmpeg: CMakeDeps emits ffmpeg targets that link libwebp::libwebp
+# before that target exists (Conan Center; macOS/Linux source builds). FFmpeg WebP
+# in avcodec is optional for typical OpenCV use; see conan-center-index#28939.
+[options]
+ffmpeg/*:with_libwebp=False
+
 [generators]
 CMakeDeps
 CMakeToolchain
