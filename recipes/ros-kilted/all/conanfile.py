@@ -95,9 +95,9 @@ import subprocess
 import sys
 
 from conan import ConanFile
-from conan.errors import ConanInvalidConfiguration, ConanException
+from conan.errors import ConanException
 from conan.tools.cmake import CMakeDeps, CMakeToolchain
-from conan.tools.env import Environment, VirtualBuildEnv
+from conan.tools.env import VirtualBuildEnv
 from conan.tools.files import (
     apply_conandata_patches,
     copy,
@@ -314,21 +314,6 @@ class Ros2KiltedConan(ConanFile):
         vbe = VirtualBuildEnv(self)
         vbe.environment().define("ROS_DISTRO", "kilted")
         vbe.generate()
-        # Colcon prepends merge-install purelib to PYTHONPATH for dependent CMake builds, but
-        # that value is not always present in the env passed to CMake on every OS (PyEnv is the
-        # interpreter while ament_package lives only under the merge prefix). Mirror colcon here.
-        py_mm = subprocess.run(
-            [pyenv.env_exe, "-c", "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-        merge_site = os.path.join(
-            self.build_folder, "install", "lib", f"python{py_mm}", "site-packages"
-        )
-        ros_pythonpath = Environment()
-        ros_pythonpath.prepend_path("PYTHONPATH", merge_site)
-        ros_pythonpath.vars(self).save_script("ros2_ws_install_pythonpath")
 
     def _patch_conan_toolchain_cmp0091_early(self):
         """Conan's vs_runtime block runs cmake_policy(GET CMP0091) before variables set the default.
