@@ -13,5 +13,4 @@ run("conan install -s compiler.cppstd=17 --build=missing")
 if platform.system() == "Windows":
   run("cmd.exe //C \"call build/Release/generators/conanrosenv.bat && colcon build --event-handlers console_cohesion+\"")
 else:
-  run("source build/Release/generators/conanrosenv.sh")
-  run("colcon build --event-handlers console_cohesion+")
+  run("source build/Release/generators/conanrosenv.sh && colcon build --event-handlers console_cohesion+")
