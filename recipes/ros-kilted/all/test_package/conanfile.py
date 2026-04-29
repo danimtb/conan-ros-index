@@ -40,7 +40,7 @@ class TestPackageConan(ConanFile):
         save(self, conanbuild_path, conanbuild_content)
 
     def build(self):
-        self._inject_setup_script("conanbuild")
+        #self._inject_setup_script("conanbuild")
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
@@ -48,6 +48,6 @@ class TestPackageConan(ConanFile):
     def test(self):
         if not can_run(self) or cross_building(self):
             return
-        self._inject_setup_script("conanrun")
+        #self._inject_setup_script("conanrun")
         bin_path = os.path.join(self.cpp.build.bindirs[0], "test_package_node")
         self.run(bin_path, env="conanrun")
