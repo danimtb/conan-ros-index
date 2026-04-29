@@ -11,6 +11,8 @@ conan install -s compiler.cppstd=17 --build=missing
 if [[ "${RUNNER_OS:-}" == Windows || "${OS:-}" == Windows_NT ]]; then
   cmd.exe //C "call build/Release/generators/conanrosenv.bat && colcon build --event-handlers console_cohesion+"
 else
+  set +u
   source "build/Release/generators/conanrosenv.sh"
+  set -u
   colcon build --event-handlers console_cohesion+
 fi
