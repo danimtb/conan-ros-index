@@ -1,3 +1,0 @@
-# Conan 2 user home for this workspace (cache, remotes, profiles).
-# Resolved relative to the directory containing this file when Conan finds it via cwd walk-up.
-conan_home=./.conan2
