@@ -47,6 +47,6 @@ class PoseEstimationConan(ConanFile):
         CMakeToolchain(self).generate()
         CMakeDeps(self).generate()
         VirtualBuildEnv(self).generate()
-        env_name = f"conanbuildenv-{self.settings.build_type}-{self.settings.arch}".lower
+        env_name = f"conanbuildenv-{self.settings.build_type}-{self.settings.arch}".lower()
         self._inject_setup_script(env_name)
         VCVars(self).generate()

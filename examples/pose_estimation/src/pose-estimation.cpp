@@ -333,7 +333,7 @@ int main(int argc, char *argv[]) {
     cv::VideoCapture video;
 
     if (use_camera) {
-        video.open(1);  // open default camera
+        video.open(0);  // open default camera
     } else {
         video.open(video_file);
     }
