@@ -8,17 +8,9 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 python -m pip install -q --upgrade pip colcon-common-extensions
 conan install -s compiler.cppstd=17 --build=missing
 
-g=""
-for d in build/build/generators build/Release/generators build/Debug/generators build/generators; do
-  [[ -f "$d/conanrosenv.bat" || -f "$d/conanrosenv.sh" ]] && { g="$d"; break; }
-done
-[[ "$g" ]] || { echo "conanrosenv not found under build/"; exit 1; }
-
-if [[ "${RUNNER_OS:-}" == Windows || "${OS:-}" == Windows_NT || "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* || "$(uname -s)" == CYGWIN* ]]; then
-  b="${g//\//\\}\conanrosenv.bat"
-  cmd.exe //C "call ${b} && colcon build --cmake-args -DCMAKE_CONFIGURATION_TYPES=Release --event-handlers console_cohesion+"
+if [[ "${RUNNER_OS:-}" == Windows || "${OS:-}" == Windows_NT ]]; then
+  cmd.exe //C "call build/build/generators/conanrosenv.bat && colcon build --event-handlers console_cohesion+"
 else
-  # shellcheck source=/dev/null
-  source "$g/conanrosenv.sh"
-  colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --cmake-args -DCMAKE_CONFIGURATION_TYPES=Release --event-handlers console_cohesion+
+  source "build/build/generators/conanrosenv.sh"
+  colcon build --event-handlers console_cohesion+
 fi
