@@ -7,5 +7,10 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 conan install -s compiler.cppstd=17 --build=missing
 
-cmake --preset conan-release
-cmake --build --preset conan-release
+if [[ "${RUNNER_OS:-}" == Windows || "${OS:-}" == Windows_NT ]]; then
+  cmd.exe //C "call build/release/generators/conanbuild.bat && cmake --preset conan-release &&cmake --build --preset conan-release"
+else
+  source "build/release/generators/conanbuild.sh"
+  cmake --preset conan-release
+  cmake --build --preset conan-release
+fi
