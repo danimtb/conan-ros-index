@@ -381,10 +381,20 @@ class Ros2KiltedConan(ConanFile):
     def package_info(self):
         self.cpp_info.set_property("cmake_find_mode", "none")
         p = self.package_folder
+        self.buildenv_info.prepend_path("PATH", os.path.join(p, "bin"))
+        self.buildenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
+        self.buildenv_info.append_path("AMENT_PREFIX_PATH", p)
+        self.buildenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
+        self.buildenv_info.prepend_path("AMENT_PREFIX_PATH", p)
+        self.buildenv_info.prepend_path("CMAKE_PREFIX_PATH", p)
+        self.buildenv_info.define("ROS_DISTRO", "kilted")
+        self.buildenv_info.define("ROS_VERSION", "2")
+        self.buildenv_info.define("ROS_PYTHON_VERSION", "3")
+        self.buildenv_info.prepend_path("COLCON_PREFIX_PATH", p)
+
         self.runenv_info.prepend_path("PATH", os.path.join(p, "bin"))
         self.runenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
         self.runenv_info.append_path("AMENT_PREFIX_PATH", p)
-        self.buildenv_info.append_path("AMENT_PREFIX_PATH", p)
         self.runenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
         self.runenv_info.prepend_path("AMENT_PREFIX_PATH", p)
         self.runenv_info.prepend_path("CMAKE_PREFIX_PATH", p)
