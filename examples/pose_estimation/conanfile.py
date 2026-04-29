@@ -2,9 +2,9 @@ import os
 
 from conan import ConanFile
 from conan.tools.cmake import CMakeDeps, CMakeToolchain, cmake_layout
+from conan.tools.env import VirtualBuildEnv
 from conan.tools.files import load, save
 from conan.tools.microsoft import VCVars
-from conan.tools.ros import ROSEnv
 
 
 class PoseEstimationConan(ConanFile):
@@ -46,6 +46,6 @@ class PoseEstimationConan(ConanFile):
     def generate(self):
         CMakeToolchain(self).generate()
         CMakeDeps(self).generate()
-        ROSEnv(self).generate()
-        self._inject_setup_script("conanrosenv")
+        VirtualBuildEnv(self).generate()
+        self._inject_setup_script("conanbuild")
         VCVars(self).generate()

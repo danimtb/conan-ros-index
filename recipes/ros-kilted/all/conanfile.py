@@ -366,7 +366,7 @@ class Ros2KiltedConan(ConanFile):
             "colcon build --merge-install "
             f"--cmake-args=-DCMAKE_TOOLCHAIN_FILE={toolchain_file} "
             "--catkin-skip-building-tests "
-            "--packages-up-to rclcpp "
+            "--packages-up-to rclcpp common_interfaces "
             "--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp "
             "--event-handlers console_cohesion+"
         )
