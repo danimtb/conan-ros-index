@@ -376,22 +376,32 @@ class Ros2KiltedConan(ConanFile):
         inst = os.path.join(self.build_folder, "install")
         if not os.path.isdir(inst):
             raise ConanException(f"No merged install found at {inst}")
-        copy(self, "*", src=inst, dst=os.path.join(self.package_folder, "install"))
+        copy(self, "*", src=inst, dst=self.package_folder)
 
     def package_info(self):
         self.cpp_info.set_property("cmake_find_mode", "none")
+        p = self.package_folder
+        self.buildenv_info.prepend_path("PATH", os.path.join(p, "bin"))
+        self.buildenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
+        self.buildenv_info.append_path("AMENT_PREFIX_PATH", p)
+        self.buildenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
+        self.buildenv_info.prepend_path("AMENT_PREFIX_PATH", p)
+        self.buildenv_info.prepend_path("CMAKE_PREFIX_PATH", p)
+        self.buildenv_info.define("ROS_DISTRO", "kilted")
+        self.buildenv_info.define("ROS_VERSION", "2")
+        self.buildenv_info.define("ROS_PYTHON_VERSION", "3")
+        self.buildenv_info.prepend_path("COLCON_PREFIX_PATH", p)
 
-        install = os.path.join(self.package_folder, "install")
-        bindir = os.path.join(install, "bin")
-        if os.path.isdir(bindir):
-            self.runenv_info.prepend_path("PATH", bindir)
-        self.runenv_info.append_path("AMENT_PREFIX_PATH", install)
-        self.buildenv_info.append_path("AMENT_PREFIX_PATH", install)
-
-        # Colcon prefix (merged install under Conan package_folder). Hooks use this when
-        # consumers apply runenv before sourcing local_setup from a different cwd.
-        self.runenv_info.define("COLCON_CURRENT_PREFIX", install)
-        self.buildenv_info.define("COLCON_CURRENT_PREFIX", install)
+        self.runenv_info.prepend_path("PATH", os.path.join(p, "bin"))
+        self.runenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
+        self.runenv_info.append_path("AMENT_PREFIX_PATH", p)
+        self.runenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
+        self.runenv_info.prepend_path("AMENT_PREFIX_PATH", p)
+        self.runenv_info.prepend_path("CMAKE_PREFIX_PATH", p)
+        self.runenv_info.define("ROS_DISTRO", "kilted")
+        self.runenv_info.define("ROS_VERSION", "2")
+        self.runenv_info.define("ROS_PYTHON_VERSION", "3")
+        self.runenv_info.prepend_path("COLCON_PREFIX_PATH", p)
 
         # colcon local_setup.* and ament prefix hooks embed a build-time Python path.
         # Pre-set these so consumers (VirtualRunEnv / conanrun) override before calling
@@ -404,8 +414,8 @@ class Ros2KiltedConan(ConanFile):
             self.buildenv_info.define("AMENT_PYTHON_EXECUTABLE", py_exe)
 
         # Consumers often use local_setup.bat; document path.
-        self.conf_info.define_path("user.ros2:install_prefix", install)
-        setup_script_path = os.path.join(install, "setup")
+        self.conf_info.define_path("user.ros2:install_prefix", p)
+        setup_script_path = os.path.join(p, "setup")
         setup_script_path_sh = setup_script_path + ".sh"
         setup_script_path_bat = setup_script_path + ".bat"
         setup_script_path_ps1 = setup_script_path + ".ps1"
