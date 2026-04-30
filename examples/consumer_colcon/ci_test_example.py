@@ -2,7 +2,7 @@ import platform
 
 from test.examples_tools import run
 
-run("python -m pip install -q --upgrade pip colcon-common-extensions")
+run("python -m pip install -q --upgrade pip colcon-common-extensions catkin_pkg")
 
 run("conan install -s compiler.cppstd=17 --build=missing")
 
