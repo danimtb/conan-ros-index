@@ -30,7 +30,7 @@ run("conan install -s compiler.cppstd=17 --build=missing")
 if platform.system() == "Windows":
     cmake_py = subprocess.list2cmdline([f"-DPython3_EXECUTABLE={sys.executable}"])
     run(
-        f"call ./build/Release/generators/conanrosenv.bat && "
+        r"call .\build\Release\generators\conanrosenv.bat && "
         f"colcon build --event-handlers console_cohesion+ --cmake-args {cmake_py}"
     )
 else:
