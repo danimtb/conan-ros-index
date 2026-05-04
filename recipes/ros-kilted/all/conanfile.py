@@ -90,11 +90,12 @@
 #   from pixi env; with Conan-first builds map to system/Qt or optional qt pkg.
 # ------------------------------------------------------------------------------
 
+import glob
 import os
 import sys
 
 from conan import ConanFile
-from conan.errors import ConanInvalidConfiguration, ConanException
+from conan.errors import ConanException
 from conan.tools.cmake import CMakeDeps, CMakeToolchain
 from conan.tools.env import VirtualBuildEnv
 from conan.tools.files import (
@@ -363,12 +364,12 @@ class Ros2KiltedConan(ConanFile):
         toolchain_file = os.path.join(
             self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
         cmd = (
-            f'colcon build --merge-install '
-            f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
-            '--catkin-skip-building-tests '
-            '--packages-up-to rclcpp '
-            '--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp '
-            '--event-handlers console_cohesion+'
+            "colcon build --merge-install "
+            f"--cmake-args=-DCMAKE_TOOLCHAIN_FILE={toolchain_file} "
+            "--catkin-skip-building-tests "
+            "--packages-up-to rclcpp common_interfaces "
+            "--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp "
+            "--event-handlers console_cohesion+"
         )
         self.run(cmd, env="conanbuild")
 
@@ -385,6 +386,8 @@ class Ros2KiltedConan(ConanFile):
         self.buildenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
         self.buildenv_info.append_path("AMENT_PREFIX_PATH", p)
         self.buildenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
+        for site in sorted(glob.glob(os.path.join(p, "lib", "python*", "site-packages"))):
+            self.buildenv_info.prepend_path("PYTHONPATH", site)
         self.buildenv_info.prepend_path("AMENT_PREFIX_PATH", p)
         self.buildenv_info.prepend_path("CMAKE_PREFIX_PATH", p)
         self.buildenv_info.define("ROS_DISTRO", "kilted")
@@ -396,6 +399,8 @@ class Ros2KiltedConan(ConanFile):
         self.runenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
         self.runenv_info.append_path("AMENT_PREFIX_PATH", p)
         self.runenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
+        for site in sorted(glob.glob(os.path.join(p, "lib", "python*", "site-packages"))):
+            self.runenv_info.prepend_path("PYTHONPATH", site)
         self.runenv_info.prepend_path("AMENT_PREFIX_PATH", p)
         self.runenv_info.prepend_path("CMAKE_PREFIX_PATH", p)
         self.runenv_info.define("ROS_DISTRO", "kilted")

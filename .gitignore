@@ -15,6 +15,11 @@ recipes/**/test_package/**/generators/
 CMakeUserPresets.json
 ConanPresets.json
 
+# --- Examples (ci-commands.sh: conan install / conan build / colcon / CMake presets) ---
+examples/**/build/
+examples/**/install/
+examples/**/log/
+
 # --- Python ---
 __pycache__/
 *.py[cod]
