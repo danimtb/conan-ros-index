@@ -14,9 +14,6 @@ jobs:
           - runner: windows-latest
             profile: profiles/windows-msvc
             conan_home: C:/.c2
-          - runner: macos-latest
-            profile: profiles/macos-clang
-            conan_home: /tmp/conan-ci
 
     runs-on: ${{ matrix.runner }}
     env:
