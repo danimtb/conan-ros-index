@@ -12,5 +12,5 @@ if platform.system() == "Windows":
 else:
     run(
         ". ./build/Release/generators/conanbuild.sh && "
-        "cmake --preset conan-release && cmake --build --preset conan-release"
+        "cmake --preset conan-default && cmake --build --preset conan-default"
     )
