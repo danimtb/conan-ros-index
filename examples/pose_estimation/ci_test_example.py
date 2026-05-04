@@ -6,7 +6,7 @@ run("conan install -s compiler.cppstd=17 --build=missing")
 
 if platform.system() == "Windows":
     run(
-        r"call .\build\Release\generators\conanbuild.bat && "
+        r"call .\build\generators\conanbuild.bat && "
         r"cmake --preset conan-release && cmake --build --preset conan-release"
     )
 else:
