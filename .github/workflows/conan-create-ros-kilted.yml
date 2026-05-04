@@ -7,12 +7,31 @@ on:
 
 jobs:
   conan-create:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            profile: profiles/windows-msvc
+            conan_home: C:/.c2
+          - runner: macos-latest
+            profile: profiles/macos-clang
+            conan_home: /tmp/conan-ci
+
+    runs-on: ${{ matrix.runner }}
+    env:
+      CONAN_HOME: ${{ matrix.conan_home }}
+
     steps:
       - name: Enable long paths for git
+        if: runner.os == 'Windows'
         run: git config --global core.longpaths true
 
       - uses: actions/checkout@v4
+
+      - name: Prepare Conan home
+        shell: bash
+        run: mkdir -p "$CONAN_HOME"
 
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v2.2
@@ -27,7 +46,8 @@ jobs:
           update-environment: false
 
       - name: Prepend Python to System PATH
-        run: echo "$(dirname ${{ steps.setup_python.outputs.python-path }})" >> $GITHUB_PATH
+        shell: bash
+        run: echo "$(dirname '${{ steps.setup_python.outputs.python-path }}')" >> "$GITHUB_PATH"
 
       - name: Install latest Conan
         run: |
@@ -44,4 +64,4 @@ jobs:
 
       - name: Conan create
         working-directory: ${{ github.workspace }}
-        run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing --profile=profiles/windows-msvc
+        run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing --profile=${{ matrix.profile }}

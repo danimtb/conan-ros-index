@@ -307,6 +307,7 @@ class Ros2KiltedConan(ConanFile):
                 "-Wno-error=nonnull",                      # FastDDS TypeObjectRegistry.cpp
             ])
         tc.cache_variables["BUILD_TESTING"] = False
+        tc.variables["BUILD_TESTING"] = False
         tc.cache_variables["Python3_ROOT_DIR"] = pyenv.env_dir
         tc.cache_variables["Python3_EXECUTABLE"] = pyenv.env_exe
         tc.cache_variables["Python_ROOT_DIR"] = pyenv.env_dir
@@ -317,9 +318,7 @@ class Ros2KiltedConan(ConanFile):
         # and the matching --packages-ignore entries in build().
         # tc.cache_variables["USE_SYSTEM_ZENOH"] = True
         # MSVC path limit (~260) vs deep Conan build dirs + long rosidl names.
-        if self.settings.os == "Windows":
-            tc.cache_variables["CMAKE_OBJECT_PATH_MAX"] = 220
-            tc.variables["CMAKE_OBJECT_PATH_MAX"] = 220
+
         # Duplicated into tc.variables because colcon invokes cmake directly
         # (no CMakePresets), so it only sees what lands in conan_toolchain.cmake.
         tc.variables["Python3_ROOT_DIR"] = py_root
