@@ -14,8 +14,8 @@ patches:
     - patch_file: patches/0002-rosidl-generator-py-msvc-short-object-dir.patch
       patch_description: rosidl_generator_py - MSVC /Fo short dir (MAX_PATH on .obj under VS generator)
     - patch_file: patches/0003-rviz-ogre-vendor-ogre-lod-cpp17.patch
-      patch_description: rviz_ogre_vendor - OGRE 1.12.10 drop std::binary_function (removed in C++17 / Apple libc++)
+      patch_description: rviz_ogre_vendor - OGRE 1.12.10 C++17 LOD patch + Assimp fix::assimp uses assimp::assimp (Conan headers for Codec_Assimp)
     - patch_file: patches/0004-rviz-ogre-vendor-conan-zlib-freetype-windows.patch
       patch_description: rviz_ogre_vendor - Windows use find_package ZLIB/Freetype (Conan); forward toolchain to OGRE ExternalProject
-    - patch_file: patches/0005-rviz-ogre-vendor-ogre-assimp-conan-target.patch
-      patch_description: rviz_ogre_vendor - OGRE fix::assimp uses assimp::assimp when present (Conan include dirs for Codec_Assimp)
+    - patch_file: patches/0006-rviz-ogre-vendor-msvc-runtime-for-ogre-subbuild.patch
+      patch_description: rviz_ogre_vendor - forward CMP0091 and CMAKE_MSVC_RUNTIME_LIBRARY into OGRE ExternalProject (Codec_Assimp LNK2038)

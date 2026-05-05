@@ -265,7 +265,7 @@ class Ros2KiltedConan(ConanFile):
         # from the ROS workspace and reuse eigen/console_bridge/tinyxml2/sqlite3/lz4/zstd.
         variant = str(self.options.variant)
 
-        if variant == ("base","desktop", "desktop_full"):
+        if variant in ("base", "desktop", "desktop_full"):
             self.requires("orocos_kdl/1.5.1")
 
         if variant in ("desktop", "desktop_full"):
