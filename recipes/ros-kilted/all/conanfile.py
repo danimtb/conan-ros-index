@@ -239,8 +239,8 @@ class Ros2KiltedConan(ConanFile):
         # Temporarily off: no matching ConanCenter prebuilt for this Windows/MSVC profile (re-enable with
         # --build=missing or after binaries exist). Missing-binary set included:
         # assimp/5.3.1, cppcheck/2.15.0, dav1d/1.5.3, ffmpeg/4.4.4, freetype/2.13.2, libcurl/8.5.0,
-        # libtiff/4.6.0, libvpx/1.15.2, libwebp/1.3.2, libx265/3.6, opencv/4.9.0, openh264/2.6.0,
-        # protobuf/3.21.12, spdlog/1.12.0, xz_utils/5.8.3 (opencv pulls most of the media stack).
+        # libtiff/4.6.0, libvpx/1.15.2, libx265/3.6, openh264/2.6.0,
+        # protobuf/3.21.12, xz_utils/5.8.3 (opencv pulls most of the media stack).
         self.requires("spdlog/1.12.0")  # pixi env requires 1.12.0 while spdlog_vendor requires 1.5.0
         self.requires("eigen/3.4.0")
         self.requires("yaml-cpp/0.8.0")
@@ -270,6 +270,7 @@ class Ros2KiltedConan(ConanFile):
             self.requires("opencv/4.9.0")
             self.requires("assimp/5.3.1")
             self.requires("freetype/2.13.2")
+            self.requires("libwebp/1.3.2")
             self.requires("openjpeg/2.5.2", override=True)
             # self.requires("qt/5.x")  # Not on ConanCenter (only Qt6); rviz2/rqt_* need Qt5 — provide via system or custom recipe.
             # OGRE is built internally by rviz_ogre_vendor; no Conan require needed.
@@ -336,6 +337,7 @@ class Ros2KiltedConan(ConanFile):
         cmakedeps.set_property("tinyxml2", "cmake_file_name", "TinyXML2")
         cmakedeps.set_property("tinyxml2", "cmake_extra_variables", {"TINYXML2_LIBRARY": "tinyxml2::tinyxml2"})
         cmakedeps.set_property("asio", "cmake_file_name", "Asio")
+        cmakedeps.set_property("lz4", "cmake_target_name", "LZ4::lz4")
         cmakedeps.generate()
         VCVars(self).generate()
         vbe = VirtualBuildEnv(self)
