@@ -44,7 +44,7 @@
 # | numpy                        | pip      |                                            |
 # | opencv                       | require  | opencv/*                                  |
 # | openssl                      | require  | openssl/*                                 |
-# | orocos-kdl                   | require  | orocos_kdl/* (base+); PyKDL patched for Conan target |
+# | orocos-kdl                   | require  | orocos_kdl/* + python_orocos_kdl/* (base+); vendor skips FetchContent |
 # | packaging                    | pip      |                                            |
 # | pathspec                     | pip      |                                            |
 # | pip                          | skip     | UV / PyEnv manages installer              |
@@ -63,7 +63,7 @@
 # | python                       | pyenv    | PyEnv(self, py_version=…) → 3.12.3        |
 # | python-dateutil              | pip      |                                            |
 # | python-fastjsonschema        | pip      |                                            |
-# | python-orocos-kdl            | pip      | pip KDL bindings (pixi also has C orocos) |
+# | python-orocos-kdl            | require  | python_orocos_kdl/* (base+); PYTHONPATH for PyKDL |
 # | pyyaml                       | pip      | PyYAML (distinct from C yaml below)       |
 # | qt                           | skip     | optional huge stack; pyqt often enough    |
 # | rust                         | tool     | rust/* tool_requires (see profile: newer  |
@@ -261,12 +261,13 @@ class Ros2KiltedConan(ConanFile):
         self.requires("pybind11/2.11.1")
 
         # Variant-scoped requires (package_id reflects the exact dep set per variant).
-        # `base` adds no new Conan deps over `core`: tf2/urdf/orocos_kdl/rosbag2 are built
-        # from the ROS workspace and reuse eigen/console_bridge/tinyxml2/sqlite3/lz4/zstd.
+        # `base` adds orocos_kdl + python_orocos_kdl so python_orocos_kdl_vendor finds PyKDL
+        # on PYTHONPATH; other base-only ROS packages still reuse core Conan deps.
         variant = str(self.options.variant)
 
         if variant in ("base", "desktop", "desktop_full"):
             self.requires("orocos_kdl/1.5.1")
+            self.requires("python_orocos_kdl/1.5.1")
 
         if variant in ("desktop", "desktop_full"):
             self.requires("opencv/4.9.0")

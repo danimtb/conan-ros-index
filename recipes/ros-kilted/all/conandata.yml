@@ -19,5 +19,3 @@ patches:
       patch_description: rviz_ogre_vendor - Windows use find_package ZLIB/Freetype (Conan); forward toolchain to OGRE ExternalProject
     - patch_file: patches/0006-rviz-ogre-vendor-msvc-runtime-for-ogre-subbuild.patch
       patch_description: rviz_ogre_vendor - forward CMP0091 and CMAKE_MSVC_RUNTIME_LIBRARY into OGRE ExternalProject (Codec_Assimp LNK2038)
-    - patch_file: patches/0007-python-orocos-kdl-vendor-conan-pykdl-link.patch
-      patch_description: python_orocos_kdl_vendor - PyKDL links Conan orocos-kdl target + explicit Boost (fixes missing boost/shared_ptr.hpp on MSVC/macOS)
