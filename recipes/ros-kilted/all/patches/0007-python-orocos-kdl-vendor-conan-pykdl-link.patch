@@ -41,15 +41,15 @@ index 0000000..0584956
 +endif()
 diff --git a/src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/patches/0002-conan-orocos-kdl-pykdl-target.patch b/src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/patches/0002-conan-orocos-kdl-pykdl-target.patch
 new file mode 100644
-index 0000000..c188e13
+index 0000000..77750dc
 --- /dev/null
 +++ b/src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/patches/0002-conan-orocos-kdl-pykdl-target.patch
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,54 @@
 +diff --git a/python_orocos_kdl/CMakeLists.txt b/python_orocos_kdl/CMakeLists.txt
-+index 5727483..59a4913 100644
++index 5727483..241bec4 100644
 +--- a/python_orocos_kdl/CMakeLists.txt
 ++++ b/python_orocos_kdl/CMakeLists.txt
-+@@ -27,8 +27,30 @@ project(python_orocos_kdl VERSION 1.5.1)
++@@ -27,8 +27,40 @@ project(python_orocos_kdl VERSION 1.5.1)
 + 
 + # find a matching version of orocos_kdl
 + find_package(orocos_kdl ${PROJECT_VERSION} EXACT REQUIRED)
@@ -70,19 +70,28 @@ index 0000000..c188e13
 ++  set(_PYKDL_OROCOS_KDL_TARGET ${orocos_kdl_LIBRARIES})
 ++endif()
 ++
-++# Belt-and-suspenders: ensure Boost headers are on the line even if usage requirements
-++# do not propagate into this subdirectory (e.g. some pybind11 / FetchContent layouts).
-++find_package(Boost QUIET CONFIG)
+++# Match Conan Boost test_package usage: find_package(Boost REQUIRED) + Boost::headers.
+++find_package(Boost REQUIRED)
 ++set(_PYKDL_BOOST_LIBS "")
-++if(TARGET Boost::boost)
-++  list(APPEND _PYKDL_BOOST_LIBS Boost::boost)
-++elseif(TARGET Boost::headers)
+++if(TARGET Boost::headers)
 ++  list(APPEND _PYKDL_BOOST_LIBS Boost::headers)
+++elseif(TARGET Boost::boost)
+++  list(APPEND _PYKDL_BOOST_LIBS Boost::boost)
 ++endif()
+++if(NOT _PYKDL_BOOST_LIBS AND TARGET boost::headers)
+++  list(APPEND _PYKDL_BOOST_LIBS boost::headers)
+++elseif(NOT _PYKDL_BOOST_LIBS AND TARGET boost::boost)
+++  list(APPEND _PYKDL_BOOST_LIBS boost::boost)
+++endif()
+++# Fallback covers lowercase Conan target naming variants.
+++# If no explicit Boost target exists, orocos_kdl target usage still provides includes.
+++# Keep explicit link interface to guarantee boost/shared_ptr.hpp visibility.
+++# 
+++# 
 + 
 + set(PYBIND11_PYTHON_VERSION 3 CACHE STRING "Python version used by PyBind11")
 + 
-+@@ -64,5 +86,5 @@ pybind11_add_module(${LIBRARY_NAME}
++@@ -64,5 +96,5 @@ pybind11_add_module(${LIBRARY_NAME}
 +   PyKDL/kinfam.cpp
 +   PyKDL/framevel.cpp
 +   PyKDL/dynamics.cpp)
