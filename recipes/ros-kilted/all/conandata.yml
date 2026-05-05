@@ -17,3 +17,5 @@ patches:
       patch_description: rviz_ogre_vendor - OGRE 1.12.10 drop std::binary_function (removed in C++17 / Apple libc++)
     - patch_file: patches/0004-rviz-ogre-vendor-conan-zlib-freetype-windows.patch
       patch_description: rviz_ogre_vendor - Windows use find_package ZLIB/Freetype (Conan); forward toolchain to OGRE ExternalProject
+    - patch_file: patches/0005-rviz-ogre-vendor-ogre-assimp-conan-target.patch
+      patch_description: rviz_ogre_vendor - OGRE fix::assimp uses assimp::assimp when present (Conan include dirs for Codec_Assimp)
