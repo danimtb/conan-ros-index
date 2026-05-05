@@ -270,7 +270,7 @@ class Ros2KiltedConan(ConanFile):
             self.requires("opencv/4.9.0")
             self.requires("assimp/5.3.1")
             self.requires("freetype/2.13.2")
-            self.requires("libwebp/1.3.2")
+            #self.requires("libwebp/1.3.2")
             self.requires("openjpeg/2.5.2", override=True)
             # self.requires("qt/5.x")  # Not on ConanCenter (only Qt6); rviz2/rqt_* need Qt5 — provide via system or custom recipe.
             # OGRE is built internally by rviz_ogre_vendor; no Conan require needed.
@@ -338,6 +338,7 @@ class Ros2KiltedConan(ConanFile):
         cmakedeps.set_property("tinyxml2", "cmake_extra_variables", {"TINYXML2_LIBRARY": "tinyxml2::tinyxml2"})
         cmakedeps.set_property("asio", "cmake_file_name", "Asio")
         cmakedeps.set_property("lz4", "cmake_target_name", "LZ4::lz4")
+        cmakedeps.set_property("zstd", "cmake_target_name", "zstd::zstd")
         cmakedeps.generate()
         VCVars(self).generate()
         vbe = VirtualBuildEnv(self)

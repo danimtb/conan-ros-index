@@ -6,3 +6,6 @@ compiler.cppstd=gnu17
 compiler.libcxx=libc++
 compiler.version=17
 os=Macos
+
+[options]
+opencv/*:with_ffmpeg=False
