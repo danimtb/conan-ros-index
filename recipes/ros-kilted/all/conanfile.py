@@ -265,11 +265,13 @@ class Ros2KiltedConan(ConanFile):
         # from the ROS workspace and reuse eigen/console_bridge/tinyxml2/sqlite3/lz4/zstd.
         variant = str(self.options.variant)
 
+        if variant == ("base","desktop", "desktop_full"):
+            self.requires("orocos_kdl/1.5.1")
+
         if variant in ("desktop", "desktop_full"):
             self.requires("opencv/4.9.0")
             self.requires("assimp/5.3.1")
             self.requires("freetype/2.13.2")
-            self.requires("orocos_kdl/1.5.1")
             self.requires("libcurl/8.5.0")
             self.requires("openjpeg/2.5.2", override=True)
             # self.requires("qt/5.x")  # Not on ConanCenter (only Qt6); rviz2/rqt_* need Qt5 — provide via system or custom recipe.
