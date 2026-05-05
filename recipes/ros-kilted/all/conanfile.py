@@ -102,6 +102,7 @@ from conan.tools.files import (
     apply_conandata_patches,
     copy,
     download,
+    get,
     mkdir,
     replace_in_file,
     rmdir,
@@ -208,6 +209,18 @@ class Ros2KiltedConan(ConanFile):
     url = "https://docs.ros.org/en/kilted/"
     description = "ROS 2 Kilted merged install from source, dependencies via Conan + PyEnv."
     settings = "os", "compiler", "build_type", "arch"
+    options = {"variant": ["core", "base", "desktop", "desktop_full"]}
+    default_options = {"variant": "core"}
+
+    # ros2/variants metapackages. core/base prefixed with `ros_`; desktop variants not.
+    # Status: `core` builds. `base` reuses core's Conan deps (only adds ROS source pkgs).
+    # `desktop` blocked on Qt5, `desktop_full` on Qt5 + VTK (none on CCI). See requirements().
+    _VARIANT_TARGET = {
+        "core": "ros_core",
+        "base": "ros_base",
+        "desktop": "desktop",
+        "desktop_full": "desktop_full",
+    }
 
     def layout(self):
         # Single-tree colcon workspace: src/, build/, install/, log/ under ros2_ws/
@@ -241,14 +254,28 @@ class Ros2KiltedConan(ConanFile):
         self.requires("gtest/1.17.0")
         self.requires("benchmark/1.8.3", options={"shared": True})
         self.requires("console_bridge/1.0.2")
-        # self.requires("assimp/5.3.1")
-        # self.requires("opencv/4.9.0")
         self.requires("bullet3/3.25")
         self.requires("cunit/2.1-3")
         self.requires("libyaml/0.2.5")
         #self.requires("zenoh-c/1.8.0")
         #self.requires("zenoh-cpp/1.8.0")
         self.requires("pybind11/2.11.1")
+
+        # Variant-scoped requires (package_id reflects the exact dep set per variant).
+        # `base` adds no new Conan deps over `core`: tf2/urdf/orocos_kdl/rosbag2 are built
+        # from the ROS workspace and reuse eigen/console_bridge/tinyxml2/sqlite3/lz4/zstd.
+        variant = str(self.options.variant)
+
+        if variant in ("desktop", "desktop_full"):
+            self.requires("opencv/4.9.0")
+            self.requires("assimp/5.3.1")
+            self.requires("freetype/2.13.2")
+            # self.requires("qt/5.x")  # Not on ConanCenter (only Qt6); rviz2/rqt_* need Qt5 — provide via system or custom recipe.
+            # OGRE is built internally by rviz_ogre_vendor; no Conan require needed.
+
+        if variant == "desktop_full":
+            self.requires("pcl/1.14.1")  # built with with_vtk=False on CCI; OK for headless, not for full viz.
+            # self.requires("vtk/9.x")  # Not on ConanCenter; required for PCL visualization — provide via system or custom recipe.
 
     def build_requirements(self):
         self.tool_requires("cmake/3.28.5")
@@ -281,6 +308,7 @@ class Ros2KiltedConan(ConanFile):
                 "-Wno-error=nonnull",                      # FastDDS TypeObjectRegistry.cpp
             ])
         tc.cache_variables["BUILD_TESTING"] = False
+        tc.variables["BUILD_TESTING"] = False
         tc.cache_variables["Python3_ROOT_DIR"] = pyenv.env_dir
         tc.cache_variables["Python3_EXECUTABLE"] = pyenv.env_exe
         tc.cache_variables["Python_ROOT_DIR"] = pyenv.env_dir
@@ -291,9 +319,7 @@ class Ros2KiltedConan(ConanFile):
         # and the matching --packages-ignore entries in build().
         # tc.cache_variables["USE_SYSTEM_ZENOH"] = True
         # MSVC path limit (~260) vs deep Conan build dirs + long rosidl names.
-        if self.settings.os == "Windows":
-            tc.cache_variables["CMAKE_OBJECT_PATH_MAX"] = 220
-            tc.variables["CMAKE_OBJECT_PATH_MAX"] = 220
+
         # Duplicated into tc.variables because colcon invokes cmake directly
         # (no CMakePresets), so it only sees what lands in conan_toolchain.cmake.
         tc.variables["Python3_ROOT_DIR"] = py_root
@@ -336,8 +362,9 @@ class Ros2KiltedConan(ConanFile):
     def source(self):
         pyenv = PyEnv(self, folder=self.source_folder)
         pyenv.install(["setuptools==68.1.2", "vcstool==0.3.0"])
+        sources_data = self.conan_data["sources"][str(self.version)]
         repos = os.path.join(self.source_folder, "ros2.repos")
-        download(self, **self.conan_data["sources"][str(self.version)], filename=repos)
+        download(self, url=sources_data["url"], sha256=sources_data["sha256"], filename=repos)
         src_dir = os.path.join(self.source_folder, "src")
         if os.path.isdir(src_dir):
             rmdir(self, src_dir)
@@ -352,6 +379,13 @@ class Ros2KiltedConan(ConanFile):
         vcs_exe = os.path.join(boot.bin_path, "vcs")
         self.run(f'"{vcs_exe}" import --input "{repos}" src',
                  cwd=self.source_folder)
+
+        # ros2/variants tarball into src/ros2/variants/ so colcon resolves
+        # --packages-up-to {ros_core,ros_base,desktop,desktop_full}.
+        get(self, **sources_data["variants"],
+            destination=os.path.join(src_dir, "ros2", "variants"),
+            strip_root=True)
+
         apply_conandata_patches(self)
 
     def build(self):
@@ -364,12 +398,12 @@ class Ros2KiltedConan(ConanFile):
         toolchain_file = os.path.join(
             self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
         cmd = (
-            "colcon build --merge-install "
-            f"--cmake-args=-DCMAKE_TOOLCHAIN_FILE={toolchain_file} "
-            "--catkin-skip-building-tests "
-            "--packages-up-to rclcpp common_interfaces "
-            "--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp "
-            "--event-handlers console_cohesion+"
+            f'colcon build --merge-install '
+            f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
+            '--catkin-skip-building-tests '
+            f'--packages-up-to {self._VARIANT_TARGET[str(self.options.variant)]} '
+            '--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp '
+            '--event-handlers console_cohesion+'
         )
         self.run(cmd, env="conanbuild")
 

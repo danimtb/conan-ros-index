@@ -15,12 +15,9 @@ compiler.cppstd=17
 compiler.runtime=dynamic
 compiler.version=194
 
-[conf]
-tools.cmake.cmaketoolchain:generator=Ninja
-
 [options]
 # zenoh-c source+cargo build can fail on some Windows setups (build-script rustc spawn). Use upstream MSVC zip.
-zenoh-c/*:upstream_binary=True
+#zenoh-c/*:upstream_binary=True
 
 [tool_requires]
-rust/1.93.0
+#rust/1.93.0

@@ -2,6 +2,10 @@ sources:
   "0.1.0":
     url: "https://raw.githubusercontent.com/ros2/ros2/kilted/ros2.repos"
     sha256: "7e362e761e334250c8e3a278397e634bdcf3d235c39b655a74ff174ab6215525"
+    # ros2/variants metapackages (not in ros2.repos). Bump in lockstep with the snapshot above.
+    variants:
+      url: "https://github.com/ros2/variants/archive/e358bccb2edde3b681e898bf7fa8e157634f6e50.tar.gz"
+      sha256: "679737de544e9304d96779d95d60f29a8514d9a35987747b8a8e7296cd7a01be"
 
 patches:
   "0.1.0":
