@@ -44,7 +44,7 @@ new file mode 100644
 index 0000000..77750dc
 --- /dev/null
 +++ b/src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/patches/0002-conan-orocos-kdl-pykdl-target.patch
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,53 @@
 +diff --git a/python_orocos_kdl/CMakeLists.txt b/python_orocos_kdl/CMakeLists.txt
 +index 5727483..241bec4 100644
 +--- a/python_orocos_kdl/CMakeLists.txt
