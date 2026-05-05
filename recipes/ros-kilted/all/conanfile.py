@@ -44,7 +44,7 @@
 # | numpy                        | pip      |                                            |
 # | opencv                       | require  | opencv/*                                  |
 # | openssl                      | require  | openssl/*                                 |
-# | orocos-kdl                   | skip     | C++ from ROS workspace; no Conan require   |
+# | orocos-kdl                   | require  | orocos_kdl/* (base+); PyKDL patched for Conan target |
 # | packaging                    | pip      |                                            |
 # | pathspec                     | pip      |                                            |
 # | pip                          | skip     | UV / PyEnv manages installer              |
