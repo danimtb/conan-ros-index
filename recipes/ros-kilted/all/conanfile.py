@@ -244,7 +244,6 @@ class Ros2KiltedConan(ConanFile):
         self.requires("spdlog/1.12.0")  # pixi env requires 1.12.0 while spdlog_vendor requires 1.5.0
         self.requires("eigen/3.4.0")
         self.requires("yaml-cpp/0.8.0")
-        # self.requires("libcurl/8.5.0")
         self.requires("sqlite3/3.45.2")
         self.requires("lz4/1.9.4")
         self.requires("zstd/1.5.5")
@@ -270,10 +269,12 @@ class Ros2KiltedConan(ConanFile):
             self.requires("opencv/4.9.0")
             self.requires("assimp/5.3.1")
             self.requires("freetype/2.13.2")
-            #self.requires("libwebp/1.3.2")
+            self.requires("orocos_kdl/1.5.1")
+            self.requires("libcurl/8.5.0")
             self.requires("openjpeg/2.5.2", override=True)
             # self.requires("qt/5.x")  # Not on ConanCenter (only Qt6); rviz2/rqt_* need Qt5 — provide via system or custom recipe.
-            # OGRE is built internally by rviz_ogre_vendor; no Conan require needed.
+            # OGRE is built by rviz_ogre_vendor from upstream sources; zlib/freetype are
+            # find_package'd on Windows (patched) and supplied via Conan with the colcon toolchain.
 
         if variant == "desktop_full":
             self.requires("pcl/1.14.1")  # built with with_vtk=False on CCI; OK for headless, not for full viz.
