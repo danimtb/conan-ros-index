@@ -13,3 +13,5 @@ patches:
       patch_description: google_benchmark_vendor - shared lib check on benchmark::benchmark (Conan)
     - patch_file: patches/0002-rosidl-generator-py-msvc-short-object-dir.patch
       patch_description: rosidl_generator_py - MSVC /Fo short dir (MAX_PATH on .obj under VS generator)
+    - patch_file: patches/0003-rviz-ogre-vendor-ogre-lod-cpp17.patch
+      patch_description: rviz_ogre_vendor - OGRE 1.12.10 drop std::binary_function (removed in C++17 / Apple libc++)
