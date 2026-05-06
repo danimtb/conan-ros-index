@@ -205,7 +205,7 @@ class Ros2KiltedConan(ConanFile):
     provides = "ros"  # To avoid name conflicts with other ros packages: ros-rolling, ros-humble, etc.
     exports_sources = "conandata.yml", "patches/*"
     # Shared stack + executables: keeps require.run=True so VirtualRunEnv maps cpp_info.bindirs → PATH.
-    package_type = "shared"
+    package_type = "shared-library"
     license = "Apache-2.0"
     url = "https://docs.ros.org/en/kilted/"
     description = "ROS 2 Kilted merged install from source, dependencies via Conan + PyEnv."
