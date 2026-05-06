@@ -1,15 +1,34 @@
 --- src/ros2/orocos_kdl_vendor/orocos_kdl_vendor/orocos_kdl_vendor-extras.cmake
 +++ src/ros2/orocos_kdl_vendor/orocos_kdl_vendor/orocos_kdl_vendor-extras.cmake
-@@ -24,6 +24,16 @@
+@@ -24,6 +24,35 @@
  
  find_package(eigen3_cmake_module REQUIRED)
  find_package(Eigen3 REQUIRED)
 +
++foreach(_orocos_kdl_boost_hint IN ITEMS
++    "${CMAKE_CURRENT_LIST_DIR}/../../../../conan"
++    "${CMAKE_INSTALL_PREFIX}/../conan"
++  )
++  if(EXISTS "${_orocos_kdl_boost_hint}/BoostConfig.cmake"
++      OR EXISTS "${_orocos_kdl_boost_hint}/boost-config.cmake")
++    list(PREPEND CMAKE_PREFIX_PATH "${_orocos_kdl_boost_hint}")
++    break()
++  endif()
++endforeach()
++find_package(boost CONFIG QUIET)
 +find_package(Boost CONFIG QUIET)
++set(_orocos_kdl_boost_iface "")
 +if(TARGET boost::boost)
++  set(_orocos_kdl_boost_iface boost::boost)
++elseif(TARGET Boost::boost)
++  set(_orocos_kdl_boost_iface Boost::boost)
++elseif(TARGET Boost::headers)
++  set(_orocos_kdl_boost_iface Boost::headers)
++endif()
++if(_orocos_kdl_boost_iface)
 +  foreach(_orocos_kdl_cmake_iface IN ITEMS orocos-kdl orocos_kdl::orocos_kdl)
 +    if(TARGET ${_orocos_kdl_cmake_iface})
-+      target_link_libraries(${_orocos_kdl_cmake_iface} INTERFACE boost::boost)
++      target_link_libraries(${_orocos_kdl_cmake_iface} INTERFACE ${_orocos_kdl_boost_iface})
 +    endif()
 +  endforeach()
 +endif()
