@@ -19,6 +19,7 @@ compiler.version=194
 # zenoh-c source+cargo build can fail on some Windows setups (build-script rustc spawn). Use upstream MSVC zip.
 #zenoh-c/*:upstream_binary=True
 opencv/*:with_ffmpeg=False
+ros-kilted/*:variant=base
 
 [tool_requires]
 #rust/1.93.0

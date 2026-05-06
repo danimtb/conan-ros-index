@@ -9,3 +9,4 @@ os=Macos
 
 [options]
 opencv/*:with_ffmpeg=False
+ros-kilted/*:variant=desktop

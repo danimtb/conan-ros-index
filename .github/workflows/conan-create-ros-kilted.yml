@@ -12,11 +12,9 @@ jobs:
           - runner: windows-latest
             profile: profiles/windows-msvc
             conan_home: C:/.c2
-            variant: base
           - runner: macos-latest
             profile: profiles/macos-clang
             conan_home: /tmp/conan-ci
-            variant: desktop
 
     runs-on: ${{ matrix.runner }}
     env:
@@ -67,7 +65,7 @@ jobs:
 
       - name: Conan create
         working-directory: ${{ github.workspace }}
-        run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing --profile=${{ matrix.profile }} --options=ros-kilted/*:variant=${{ matrix.variant }}
+        run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing --profile=${{ matrix.profile }}
 
       - name: Find and run examples
         shell: bash
