@@ -275,7 +275,7 @@ class Ros2KiltedConan(ConanFile):
             self.requires("freetype/2.13.2")
             self.requires("libcurl/8.5.0")
             self.requires("openjpeg/2.5.2", override=True)
-            # self.requires("qt/5.x")  # Not on ConanCenter (only Qt6); rviz2/rqt_* need Qt5 — provide via system or custom recipe.
+            self.requires("qt/5.15.18")
             # OGRE is built by rviz_ogre_vendor from upstream sources; zlib/freetype are
             # find_package'd on Windows (patched) and supplied via Conan with the colcon toolchain.
 
@@ -405,11 +405,13 @@ class Ros2KiltedConan(ConanFile):
         # rclcpp works fine with the default rmw_fastrtps_cpp.
         toolchain_file = os.path.join(
             self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
+        variant = self._VARIANT_TARGET[str(self.options.variant)]
+        variant = "rviz2" if "desktop" in variant else variant  # FIXME: Build up to rviz2 for desktop variants
         cmd = (
             f'colcon build --merge-install '
             f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
             '--catkin-skip-building-tests '
-            f'--packages-up-to {self._VARIANT_TARGET[str(self.options.variant)]} '
+            f'--packages-up-to {variant} '
             '--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp '
             '--event-handlers console_cohesion+'
         )
