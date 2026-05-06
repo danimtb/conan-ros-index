@@ -30,8 +30,8 @@ class PythonOrocosKdlConan(ConanFile):
         self.requires("orocos_kdl/1.5.1")
         self.requires("pybind11/2.11.1")
         # Direct deps so CMakeDeps generates Eigen3/boost configs (transitive-only deps are omitted).
-        self.requires("eigen/3.4.0")
-        self.requires("boost/1.83.0", options={"header_only": True})
+        self.requires("eigen/3.4.0", transitive_headers=True)
+        self.requires("boost/1.83.0", options={"header_only": True}, transitive_headers=True)
 
     def source(self):
         get(self, **self.conan_data["sources"][str(self.version)], strip_root=True)

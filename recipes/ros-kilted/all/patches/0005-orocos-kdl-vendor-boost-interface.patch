@@ -1,6 +1,6 @@
 --- src/ros2/orocos_kdl_vendor/orocos_kdl_vendor/orocos_kdl_vendor-extras.cmake
 +++ src/ros2/orocos_kdl_vendor/orocos_kdl_vendor/orocos_kdl_vendor-extras.cmake
-@@ -24,6 +24,35 @@
+@@ -24,6 +24,34 @@ endif()
  
  find_package(eigen3_cmake_module REQUIRED)
  find_package(Eigen3 REQUIRED)
@@ -8,11 +8,10 @@
 +foreach(_orocos_kdl_boost_hint IN ITEMS
 +    "${CMAKE_CURRENT_LIST_DIR}/../../../../conan"
 +    "${CMAKE_INSTALL_PREFIX}/../conan"
++    "${CMAKE_BINARY_DIR}/../../conan"
 +  )
-+  if(EXISTS "${_orocos_kdl_boost_hint}/BoostConfig.cmake"
-+      OR EXISTS "${_orocos_kdl_boost_hint}/boost-config.cmake")
++  if(IS_DIRECTORY "${_orocos_kdl_boost_hint}")
 +    list(PREPEND CMAKE_PREFIX_PATH "${_orocos_kdl_boost_hint}")
-+    break()
 +  endif()
 +endforeach()
 +find_package(boost CONFIG QUIET)

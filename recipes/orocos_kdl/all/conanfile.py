@@ -31,8 +31,9 @@ class OrocosKdlConan(ConanFile):
         cmake_layout(self, src_folder="src")
 
     def requirements(self):
-        self.requires("eigen/3.4.0")
-        self.requires("boost/1.83.0", options={"header_only": True})
+        # KDL public headers include Eigen and Boost; consumers must see their includes (Conan 2 graph).
+        self.requires("eigen/3.4.0", transitive_headers=True)
+        self.requires("boost/1.83.0", options={"header_only": True}, transitive_headers=True)
 
     def build_requirements(self):
         self.tool_requires("cmake/[>=3.16 <4]")
