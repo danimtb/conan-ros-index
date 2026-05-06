@@ -47,7 +47,8 @@ class OrocosKdlConan(ConanFile):
         tc.cache_variables["BUILD_SHARED_LIBS"] = self.options.shared
         tc.cache_variables["ENABLE_TESTS"] = False
         tc.cache_variables["ENABLE_EXAMPLES"] = False
-        tc.cache_variables["KDL_USE_NEW_TREE_INTERFACE"] = True
+        # Windows: KDL_USE_NEW_TREE_INTERFACE = False so SegmentMap stays the classic TreeElement
+        tc.cache_variables["KDL_USE_NEW_TREE_INTERFACE"] = bool(self.settings.os == "Macos")
         tc.generate()
 
     def build(self):
