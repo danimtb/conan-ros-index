@@ -1,0 +1,19 @@
+--- src/ros2/orocos_kdl_vendor/orocos_kdl_vendor/orocos_kdl_vendor-extras.cmake
++++ src/ros2/orocos_kdl_vendor/orocos_kdl_vendor/orocos_kdl_vendor-extras.cmake
+@@ -24,6 +24,16 @@
+ 
+ find_package(eigen3_cmake_module REQUIRED)
+ find_package(Eigen3 REQUIRED)
++
++find_package(Boost CONFIG QUIET)
++if(TARGET boost::boost)
++  foreach(_orocos_kdl_cmake_iface IN ITEMS orocos-kdl orocos_kdl::orocos_kdl)
++    if(TARGET ${_orocos_kdl_cmake_iface})
++      target_link_libraries(${_orocos_kdl_cmake_iface} INTERFACE boost::boost)
++    endif()
++  endforeach()
++endif()
++
+ message(STATUS "Ensuring Eigen3 include directory is part of orocos-kdl CMake target")
+ if(TARGET Eigen3::Eigen)
+   # TODO: require target to exist when https://github.com/ros2/choco-packages/issues/19 is addressed

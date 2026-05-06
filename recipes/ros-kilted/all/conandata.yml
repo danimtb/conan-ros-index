@@ -17,5 +17,7 @@ patches:
       patch_description: rviz_ogre_vendor - OGRE 1.12.10 C++17 LOD patch + Assimp fix::assimp uses assimp::assimp (Conan headers for Codec_Assimp)
     - patch_file: patches/0004-rviz-ogre-vendor-conan-zlib-freetype-windows.patch
       patch_description: rviz_ogre_vendor - Windows use find_package ZLIB/Freetype (Conan); forward toolchain to OGRE ExternalProject
+    - patch_file: patches/0005-orocos-kdl-vendor-boost-interface.patch
+      patch_description: orocos_kdl_vendor - attach boost::boost to orocos-kdl (Conan CMakeDeps misses KDL header usage)
     - patch_file: patches/0006-rviz-ogre-vendor-msvc-runtime-for-ogre-subbuild.patch
       patch_description: rviz_ogre_vendor - forward CMP0091 and CMAKE_MSVC_RUNTIME_LIBRARY into OGRE ExternalProject (Codec_Assimp LNK2038)
