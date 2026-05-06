@@ -204,7 +204,8 @@ class Ros2KiltedConan(ConanFile):
     version = "0.1.0"
     provides = "ros"  # To avoid name conflicts with other ros packages: ros-rolling, ros-humble, etc.
     exports_sources = "conandata.yml", "patches/*"
-    # package_type = "library"  # TODO: which is the best type?
+    # Shared stack + executables: keeps require.run=True so VirtualRunEnv maps cpp_info.bindirs → PATH.
+    package_type = "shared"
     license = "Apache-2.0"
     url = "https://docs.ros.org/en/kilted/"
     description = "ROS 2 Kilted merged install from source, dependencies via Conan + PyEnv."
@@ -426,8 +427,12 @@ class Ros2KiltedConan(ConanFile):
     def package_info(self):
         self.cpp_info.set_property("cmake_find_mode", "none")
         p = self.package_folder
-        self.buildenv_info.prepend_path("PATH", os.path.join(p, "bin"))
-        self.buildenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
+        bin_path = os.path.join(p, "bin")
+        scripts_path = os.path.join(p, "Scripts")
+        self.cpp_info.bindirs.append(bin_path)
+        self.cpp_info.bindirs.append(scripts_path)
+        self.buildenv_info.prepend_path("PATH", bin_path)
+        self.buildenv_info.prepend_path("PATH", scripts_path)
         self.buildenv_info.append_path("AMENT_PREFIX_PATH", p)
         self.buildenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
         for site in sorted(glob.glob(os.path.join(p, "lib", "python*", "site-packages"))):
@@ -439,8 +444,7 @@ class Ros2KiltedConan(ConanFile):
         self.buildenv_info.define("ROS_PYTHON_VERSION", "3")
         self.buildenv_info.prepend_path("COLCON_PREFIX_PATH", p)
 
-        self.runenv_info.prepend_path("PATH", os.path.join(p, "bin"))
-        self.runenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
+        # Run PATH: rely on cpp_info.bindirs + VirtualRunEnv (see package_type); avoids duplicating PATH here.
         self.runenv_info.append_path("AMENT_PREFIX_PATH", p)
         self.runenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
         for site in sorted(glob.glob(os.path.join(p, "lib", "python*", "site-packages"))):
@@ -451,6 +455,25 @@ class Ros2KiltedConan(ConanFile):
         self.runenv_info.define("ROS_VERSION", "2")
         self.runenv_info.define("ROS_PYTHON_VERSION", "3")
         self.runenv_info.prepend_path("COLCON_PREFIX_PATH", p)
+
+        # Vendors (OGRE, Gazebo CMake, mimick, …) install merged relocatable trees under
+        # <prefix>/opt/<pkg>/{include,lib,bin}. Expose them for consumers (CMake, PATH).
+        opt_root = os.path.join(p, "opt")
+        if os.path.isdir(opt_root):
+            for name in sorted(os.listdir(opt_root)):
+                vendor = os.path.join(opt_root, name)
+                if not os.path.isdir(vendor):
+                    continue
+                inc = os.path.join(vendor, "include")
+                if os.path.isdir(inc):
+                    self.cpp_info.includedirs.append(inc)
+                for libname in ("lib", "lib64"):
+                    libdir = os.path.join(vendor, libname)
+                    if os.path.isdir(libdir):
+                        self.cpp_info.libdirs.append(libdir)
+                bindir = os.path.join(vendor, "bin")
+                if os.path.isdir(bindir):
+                    self.cpp_info.bindirs.append(bindir)
 
         # colcon local_setup.* and ament prefix hooks embed a build-time Python path.
         # Pre-set these so consumers (VirtualRunEnv / conanrun) override before calling
