@@ -63,6 +63,17 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: conan remote add conan-ros-index . --type=local-recipes-index
 
+      - name: Add Artifactory Conan remote
+        run: |
+          conan remote add conan-ros ${{ secrets.ARTIFACTORY_URL }}
+          conan remote login -p ${{ secrets.ARTIFACTORY_PASSWORD }} ${{ secrets.ARTIFACTORY_USER }}
+
+      - name: Build Conan dependencies
+        run: conan install --requires=ros-kilted/0.1.0 --build=~ros-kilted* --build=missing --profile=${{ matrix.profile }}
+
+      - name: Upload Conan dependencies
+        run: conan upload "*" --all -r conan-ros
+
       - name: Conan create
         working-directory: ${{ github.workspace }}
         run: conan create recipes/ros-kilted/all --version=0.1.0 --build=missing --profile=${{ matrix.profile }}
