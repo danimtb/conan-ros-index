@@ -19,6 +19,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       CONAN_HOME: ${{ matrix.conan_home }}
+      ARTIFACTORY_URL: ${{ secrets.ARTIFACTORY_URL }}
+      CONAN_LOGIN_USERNAME: ${{ secrets.ARTIFACTORY_USER }}
+      CONAN_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
 
     steps:
       - name: Enable long paths for git
@@ -64,9 +67,10 @@ jobs:
         run: conan remote add conan-ros-index . --type=local-recipes-index
 
       - name: Add Artifactory Conan remote
+        shell: bash
         run: |
-          conan remote add conan-ros ${{ secrets.ARTIFACTORY_URL }}
-          conan remote login -p ${{ secrets.ARTIFACTORY_PASSWORD }} ${{ secrets.ARTIFACTORY_USER }}
+          conan remote add conan-ros "$ARTIFACTORY_URL"
+          conan remote login conan-ros
 
       - name: Build Conan dependencies
         run: conan install --requires=ros-kilted/0.1.0 --build=~ros-kilted* --build=missing --profile=${{ matrix.profile }}
