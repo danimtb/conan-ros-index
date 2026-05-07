@@ -17,19 +17,15 @@ patches:
       patch_description: rviz_ogre_vendor - OGRE 1.12.10 C++17 LOD patch + Assimp fix::assimp uses assimp::assimp (Conan headers for Codec_Assimp)
     - patch_file: patches/0004-rviz-ogre-vendor-conan-zlib-freetype-windows.patch
       patch_description: rviz_ogre_vendor - Windows use find_package ZLIB/Freetype (Conan); forward toolchain to OGRE ExternalProject
-    - patch_file: patches/0005-orocos-kdl-vendor-boost-interface.patch
-      patch_description: orocos_kdl_vendor - prepend ros2_ws/conan to CMAKE_PREFIX_PATH, find Boost, INTERFACE-link boost to orocos-kdl (CMakeDeps misses KDL headers)
+    - patch_file: patches/0005-orocos-kdl-vendor-conan-and-boost.patch
+      patch_description: orocos_kdl_vendor - prefer CMakeDeps orocos_kdl from ros2_ws/conan; prepend conan to CMAKE_PREFIX_PATH and INTERFACE-link Boost for KDL headers (CMakeDeps)
     - patch_file: patches/0006-rviz-ogre-vendor-msvc-runtime-for-ogre-subbuild.patch
       patch_description: rviz_ogre_vendor - forward CMP0091 and CMAKE_MSVC_RUNTIME_LIBRARY into OGRE ExternalProject (Codec_Assimp LNK2038)
-    - patch_file: patches/0007-python-orocos-kdl-vendor-strip-pyhash-apple.patch
-      patch_description: python_orocos_kdl_vendor - strip py::hash(py::self) on Apple (libc++ deletes std::hash<T>() for unspecialized types; Conan orocos_kdl/1.5.1 has no specializations)
+    - patch_file: patches/0007-python-orocos-kdl-vendor-conan-and-apple.patch
+      patch_description: python_orocos_kdl_vendor - prefer Conan python_orocos_kdl CMake package; strip py::hash(py::self) on Apple when building PyKDL from FetchContent
     - patch_file: patches/0008-foonathan-memory-vendor-use-conan.patch
       patch_description: foonathan_memory_vendor - use find_package(foonathan_memory) so Conan's package is picked up (upstream subprocess check ignores CMAKE_PREFIX_PATH)
     - patch_file: patches/0009-mcap-vendor-use-conan.patch
       patch_description: mcap_vendor - replace FetchContent of foxglove/mcap with find_package(mcap) (CCI mcap)
-    - patch_file: patches/0007-rviz-ogre-vendor-extras-conan-zlib-windows.patch
+    - patch_file: patches/0010-rviz-ogre-vendor-extras-conan-zlib-windows.patch
       patch_description: rviz_ogre_vendor-extras - drop unused FREETYPE_HOME/ZLIB_HOME; freetype via CONFIG (no vendored freetype_DIR); Freetype::Freetype + ZLIB::ZLIB for Conan
-    - patch_file: patches/0008-python-orocos-kdl-vendor-prefer-conan-pykdl.patch
-      patch_description: python_orocos_kdl_vendor - prefer Conan python_orocos_kdl package over import probe/FetchContent rebuild
-    - patch_file: patches/0009-orocos-kdl-vendor-prefer-conandeps-config.patch
-      patch_description: orocos_kdl_vendor - prefer CMakeDeps orocos_kdl config from ros2_ws/conan, avoid broken upstream package config on Windows
