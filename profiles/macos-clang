@@ -8,7 +8,7 @@ compiler.version=21
 os=Macos
 
 [options]
-ros-kilted/*:variant=desktop
+ros-kilted/*:variant=desktop_full
 
 [tool_requires]
 *: cmake/3.29.3
