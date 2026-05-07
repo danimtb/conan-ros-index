@@ -1,0 +1,32 @@
+--- src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/CMakeLists.txt
++++ src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/CMakeLists.txt
+@@ -29,14 +29,23 @@ set(Python3_FIND_UNVERSIONED_NAMES FIRST)
+ 
+ if(NOT FORCE_BUILD_VENDOR_PKG)
+-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+-  execute_process(
+-    COMMAND ${Python3_EXECUTABLE} -c "import PyKDL"
+-    RESULT_VARIABLE pykdl_import_exit_code
+-    OUTPUT_QUIET
+-    ERROR_QUIET
+-  )
+-  if(pykdl_import_exit_code EQUAL 0)
++  # Prefer Conan/CMake-discovered PyKDL when available.
++  find_package(python_orocos_kdl CONFIG QUIET)
++  if(python_orocos_kdl_FOUND)
++    message(STATUS "Found python_orocos_kdl CMake package, skipping source build")
+     set(pykdl_FOUND 1)
++  else()
++    find_package(Python3 REQUIRED COMPONENTS Interpreter)
++    execute_process(
++      COMMAND ${Python3_EXECUTABLE} -c "import PyKDL"
++      RESULT_VARIABLE pykdl_import_exit_code
++      OUTPUT_QUIET
++      ERROR_QUIET
++    )
++    if(pykdl_import_exit_code EQUAL 0)
++      set(pykdl_FOUND 1)
++    endif()
+   endif()
+ endif()
+ 
