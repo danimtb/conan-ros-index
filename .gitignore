@@ -10,6 +10,21 @@ test_package/minimal_ws/install/
 test_package/minimal_ws/log/
 
 # --- Conan recipe development (local `conan create` / `conan install`) ---
+**/conan_pyenv/
+# VirtualBuildEnv / VirtualRunEnv scripts next to conanfile or under generators/
+recipes/**/conan_pyenv*
+recipes/**/conanbuildenv*
+recipes/**/conanrunenv*
+recipes/**/deactivate_conanbuildenv*
+recipes/**/deactivate_conanrunenv*
+recipes/**/conanbuild.bat
+recipes/**/conanrun.bat
+recipes/**/conanbuild.sh
+recipes/**/conanrun.sh
+recipes/**/deactivate_conanbuild.bat
+recipes/**/deactivate_conanrun.bat
+recipes/**/deactivate_conanbuild.sh
+recipes/**/deactivate_conanrun.sh
 recipes/**/test_package/build/
 recipes/**/test_package/**/generators/
 CMakeUserPresets.json

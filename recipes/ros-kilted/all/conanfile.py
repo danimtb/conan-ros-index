@@ -44,7 +44,7 @@
 # | numpy                        | pip      |                                            |
 # | opencv                       | require  | opencv/*                                  |
 # | openssl                      | require  | openssl/*                                 |
-# | orocos-kdl                   | skip     | C++ from ROS workspace; no Conan require   |
+# | orocos-kdl                   | require  | orocos_kdl/* + python_orocos_kdl/* (base+); vendor skips FetchContent |
 # | packaging                    | pip      |                                            |
 # | pathspec                     | pip      |                                            |
 # | pip                          | skip     | UV / PyEnv manages installer              |
@@ -63,7 +63,7 @@
 # | python                       | pyenv    | PyEnv(self, py_version=…) → 3.12.3        |
 # | python-dateutil              | pip      |                                            |
 # | python-fastjsonschema        | pip      |                                            |
-# | python-orocos-kdl            | pip      | pip KDL bindings (pixi also has C orocos) |
+# | python-orocos-kdl            | require  | python_orocos_kdl/* (base+); PYTHONPATH for PyKDL |
 # | pyyaml                       | pip      | PyYAML (distinct from C yaml below)       |
 # | qt                           | skip     | optional huge stack; pyqt often enough    |
 # | rust                         | tool     | rust/* tool_requires (see profile: newer  |
@@ -204,12 +204,13 @@ class Ros2KiltedConan(ConanFile):
     version = "0.1.0"
     provides = "ros"  # To avoid name conflicts with other ros packages: ros-rolling, ros-humble, etc.
     exports_sources = "conandata.yml", "patches/*"
-    # package_type = "library"  # TODO: which is the best type?
+    # Shared stack + executables: keeps require.run=True so VirtualRunEnv maps cpp_info.bindirs → PATH.
+    package_type = "shared-library"
     license = "Apache-2.0"
     url = "https://docs.ros.org/en/kilted/"
     description = "ROS 2 Kilted merged install from source, dependencies via Conan + PyEnv."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"variant": ["core", "base", "desktop", "desktop_full"]}
+    options = {"variant": ["core", "base", "rviz2", "desktop", "desktop_full"]}
     default_options = {"variant": "core"}
 
     # ros2/variants metapackages. core/base prefixed with `ros_`; desktop variants not.
@@ -218,6 +219,7 @@ class Ros2KiltedConan(ConanFile):
     _VARIANT_TARGET = {
         "core": "ros_core",
         "base": "ros_base",
+        "rviz2": "rviz2",
         "desktop": "desktop",
         "desktop_full": "desktop_full",
     }
@@ -239,12 +241,11 @@ class Ros2KiltedConan(ConanFile):
         # Temporarily off: no matching ConanCenter prebuilt for this Windows/MSVC profile (re-enable with
         # --build=missing or after binaries exist). Missing-binary set included:
         # assimp/5.3.1, cppcheck/2.15.0, dav1d/1.5.3, ffmpeg/4.4.4, freetype/2.13.2, libcurl/8.5.0,
-        # libtiff/4.6.0, libvpx/1.15.2, libwebp/1.3.2, libx265/3.6, opencv/4.9.0, openh264/2.6.0,
-        # protobuf/3.21.12, spdlog/1.12.0, xz_utils/5.8.3 (opencv pulls most of the media stack).
+        # libtiff/4.6.0, libvpx/1.15.2, libx265/3.6, openh264/2.6.0,
+        # protobuf/3.21.12, xz_utils/5.8.3 (opencv pulls most of the media stack).
         self.requires("spdlog/1.12.0")  # pixi env requires 1.12.0 while spdlog_vendor requires 1.5.0
         self.requires("eigen/3.4.0")
         self.requires("yaml-cpp/0.8.0")
-        # self.requires("libcurl/8.5.0")
         self.requires("sqlite3/3.45.2")
         self.requires("lz4/1.9.4")
         self.requires("zstd/1.5.5")
@@ -262,16 +263,25 @@ class Ros2KiltedConan(ConanFile):
         self.requires("pybind11/2.11.1")
 
         # Variant-scoped requires (package_id reflects the exact dep set per variant).
-        # `base` adds no new Conan deps over `core`: tf2/urdf/orocos_kdl/rosbag2 are built
-        # from the ROS workspace and reuse eigen/console_bridge/tinyxml2/sqlite3/lz4/zstd.
+        # `base` adds orocos_kdl + python_orocos_kdl so python_orocos_kdl_vendor finds PyKDL
+        # on PYTHONPATH; other base-only ROS packages still reuse core Conan deps.
         variant = str(self.options.variant)
 
-        if variant in ("desktop", "desktop_full"):
+        if variant in ("base", "desktop", "desktop_full"):
+            self.requires("orocos_kdl/1.5.1")
+            self.requires("python_orocos_kdl/1.5.1")
+
+        if variant in ("rviz2", "desktop", "desktop_full"):
             self.requires("opencv/4.9.0")
             self.requires("assimp/5.3.1")
             self.requires("freetype/2.13.2")
-            # self.requires("qt/5.x")  # Not on ConanCenter (only Qt6); rviz2/rqt_* need Qt5 — provide via system or custom recipe.
-            # OGRE is built internally by rviz_ogre_vendor; no Conan require needed.
+            self.requires("libcurl/8.5.0")
+            self.requires("openjpeg/2.5.2", override=True)
+            # Default qt/*:shared=False is static-only (no qwindows.dll under plugins/);
+            # RViz/Qt QPA still loads platform plugins at runtime → require shared Qt.
+            self.requires("qt/5.15.18", options={"shared": True})
+            # OGRE is built by rviz_ogre_vendor from upstream sources; zlib/freetype are
+            # find_package'd on Windows (patched) and supplied via Conan with the colcon toolchain.
 
         if variant == "desktop_full":
             self.requires("pcl/1.14.1")  # built with with_vtk=False on CCI; OK for headless, not for full viz.
@@ -335,6 +345,8 @@ class Ros2KiltedConan(ConanFile):
         cmakedeps.set_property("tinyxml2", "cmake_file_name", "TinyXML2")
         cmakedeps.set_property("tinyxml2", "cmake_extra_variables", {"TINYXML2_LIBRARY": "tinyxml2::tinyxml2"})
         cmakedeps.set_property("asio", "cmake_file_name", "Asio")
+        cmakedeps.set_property("lz4", "cmake_target_name", "LZ4::lz4")
+        cmakedeps.set_property("zstd", "cmake_target_name", "zstd::zstd")
         cmakedeps.generate()
         VCVars(self).generate()
         vbe = VirtualBuildEnv(self)
@@ -397,11 +409,12 @@ class Ros2KiltedConan(ConanFile):
         # rclcpp works fine with the default rmw_fastrtps_cpp.
         toolchain_file = os.path.join(
             self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
+        variant = self._VARIANT_TARGET[str(self.options.variant)]
         cmd = (
             f'colcon build --merge-install '
             f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
             '--catkin-skip-building-tests '
-            f'--packages-up-to {self._VARIANT_TARGET[str(self.options.variant)]} '
+            f'--packages-up-to {variant} '
             '--packages-ignore zenoh_c_vendor zenoh_cpp_vendor rmw_zenoh_cpp '
             '--event-handlers console_cohesion+'
         )
@@ -416,8 +429,12 @@ class Ros2KiltedConan(ConanFile):
     def package_info(self):
         self.cpp_info.set_property("cmake_find_mode", "none")
         p = self.package_folder
-        self.buildenv_info.prepend_path("PATH", os.path.join(p, "bin"))
-        self.buildenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
+        bin_path = os.path.join(p, "bin")
+        scripts_path = os.path.join(p, "Scripts")
+        self.cpp_info.bindirs.append(bin_path)
+        self.cpp_info.bindirs.append(scripts_path)
+        self.buildenv_info.prepend_path("PATH", bin_path)
+        self.buildenv_info.prepend_path("PATH", scripts_path)
         self.buildenv_info.append_path("AMENT_PREFIX_PATH", p)
         self.buildenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
         for site in sorted(glob.glob(os.path.join(p, "lib", "python*", "site-packages"))):
@@ -429,8 +446,7 @@ class Ros2KiltedConan(ConanFile):
         self.buildenv_info.define("ROS_PYTHON_VERSION", "3")
         self.buildenv_info.prepend_path("COLCON_PREFIX_PATH", p)
 
-        self.runenv_info.prepend_path("PATH", os.path.join(p, "bin"))
-        self.runenv_info.prepend_path("PATH", os.path.join(p, "Scripts"))
+        # Run PATH: rely on cpp_info.bindirs + VirtualRunEnv (see package_type); avoids duplicating PATH here.
         self.runenv_info.append_path("AMENT_PREFIX_PATH", p)
         self.runenv_info.prepend_path("PYTHONPATH", os.path.join(p, "Lib", "site-packages"))
         for site in sorted(glob.glob(os.path.join(p, "lib", "python*", "site-packages"))):
@@ -441,6 +457,39 @@ class Ros2KiltedConan(ConanFile):
         self.runenv_info.define("ROS_VERSION", "2")
         self.runenv_info.define("ROS_PYTHON_VERSION", "3")
         self.runenv_info.prepend_path("COLCON_PREFIX_PATH", p)
+
+        # ConanCenter qt exposes plugins under <prefix>/plugins but does not set
+        # QT_PLUGIN_PATH; without it rviz2/rqt fail (e.g. "Could not find the Qt
+        # platform plugin \"windows\"" on MSVC builds).
+        if str(self.options.variant) in ("desktop", "desktop_full"):
+            try:
+                qt_dep = self.dependencies["qt"]
+            except KeyError:
+                qt_dep = None
+            if qt_dep is not None:
+                qt_plugins = os.path.join(qt_dep.package_folder, "plugins")
+                if os.path.isdir(qt_plugins):
+                    self.runenv_info.prepend_path("QT_PLUGIN_PATH", qt_plugins)
+                    self.buildenv_info.prepend_path("QT_PLUGIN_PATH", qt_plugins)
+
+        # Vendors (OGRE, Gazebo CMake, mimick, …) install merged relocatable trees under
+        # <prefix>/opt/<pkg>/{include,lib,bin}. Expose them for consumers (CMake, PATH).
+        opt_root = os.path.join(p, "opt")
+        if os.path.isdir(opt_root):
+            for name in sorted(os.listdir(opt_root)):
+                vendor = os.path.join(opt_root, name)
+                if not os.path.isdir(vendor):
+                    continue
+                inc = os.path.join(vendor, "include")
+                if os.path.isdir(inc):
+                    self.cpp_info.includedirs.append(inc)
+                for libname in ("lib", "lib64"):
+                    libdir = os.path.join(vendor, libname)
+                    if os.path.isdir(libdir):
+                        self.cpp_info.libdirs.append(libdir)
+                bindir = os.path.join(vendor, "bin")
+                if os.path.isdir(bindir):
+                    self.cpp_info.bindirs.append(bindir)
 
         # colcon local_setup.* and ament prefix hooks embed a build-time Python path.
         # Pre-set these so consumers (VirtualRunEnv / conanrun) override before calling
