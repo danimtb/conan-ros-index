@@ -308,6 +308,7 @@ class Ros2KiltedConan(ConanFile):
         if variant == "desktop_full":
             self.requires("pcl/1.14.1")  # built with with_vtk=False on CCI; OK for headless, not for full viz.
             # self.requires("vtk/9.x")  # Not on ConanCenter; required for PCL visualization — provide via system or custom recipe.
+            self.requires("boost/1.83.0", options={"header_only": False}, override=True)
 
     def build_requirements(self):
         self.tool_requires("cmake/3.28.5")
