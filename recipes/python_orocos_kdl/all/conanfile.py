@@ -27,11 +27,11 @@ class PythonOrocosKdlConan(ConanFile):
         cmake_layout(self, src_folder="src")
 
     def requirements(self):
-        self.requires("orocos_kdl/1.5.1")
-        self.requires("pybind11/2.11.1")
+        self.requires("orocos_kdl/1.5.1", transitive_headers=True, transitive_libs=True)
+        self.requires("pybind11/2.11.1", transitive_headers=True)
         # Direct deps so CMakeDeps generates Eigen3/boost configs (transitive-only deps are omitted).
-        self.requires("eigen/3.4.0")
-        self.requires("boost/1.83.0", options={"header_only": True})
+        self.requires("eigen/3.4.0", transitive_headers=True)
+        self.requires("boost/1.83.0", options={"header_only": True}, transitive_headers=True)
 
     def source(self):
         get(self, **self.conan_data["sources"][str(self.version)], strip_root=True)
@@ -43,6 +43,9 @@ class PythonOrocosKdlConan(ConanFile):
         pyenv = PyEnv(self)
         pyenv.generate()
         tc.cache_variables["Python3_EXECUTABLE"] = pyenv.env_exe
+        # Embed RPATH of linked deps (orocos_kdl) into the installed .so so
+        # `import PyKDL` finds liborocos-kdl.dylib without DYLD_LIBRARY_PATH.
+        tc.cache_variables["CMAKE_INSTALL_RPATH_USE_LINK_PATH"] = True
         tc.generate()
 
     def build(self):

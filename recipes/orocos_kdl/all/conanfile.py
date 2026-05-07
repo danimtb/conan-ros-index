@@ -31,8 +31,9 @@ class OrocosKdlConan(ConanFile):
         cmake_layout(self, src_folder="src")
 
     def requirements(self):
-        self.requires("eigen/3.4.0")
-        self.requires("boost/1.83.0", options={"header_only": True})
+        self.requires("eigen/3.4.0", transitive_headers=True)
+        # tree.hpp includes <boost/shared_ptr.hpp>, so boost headers must reach consumers.
+        self.requires("boost/1.83.0", options={"header_only": True}, transitive_headers=True)
 
     def build_requirements(self):
         self.tool_requires("cmake/[>=3.16 <4]")
@@ -46,7 +47,10 @@ class OrocosKdlConan(ConanFile):
         tc.cache_variables["BUILD_SHARED_LIBS"] = self.options.shared
         tc.cache_variables["ENABLE_TESTS"] = False
         tc.cache_variables["ENABLE_EXAMPLES"] = False
-        tc.cache_variables["KDL_USE_NEW_TREE_INTERFACE"] = True
+        # KDL_USE_NEW_TREE_INTERFACE switches SegmentMap to boost::shared_ptr<TreeElement>.
+        # ROS 2 consumers (robot_state_publisher, kdl_parser) expect the default
+        # SegmentMap = map<string, TreeElement>, so leave this OFF.
+        tc.cache_variables["KDL_USE_NEW_TREE_INTERFACE"] = False
         tc.generate()
 
     def build(self):

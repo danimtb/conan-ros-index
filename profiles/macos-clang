@@ -4,8 +4,9 @@ build_type=Release
 compiler=apple-clang
 compiler.cppstd=gnu17
 compiler.libcxx=libc++
-compiler.version=17
+compiler.version=21
 os=Macos
-
 [options]
 opencv/*:with_ffmpeg=False
+[tool_requires]
+*: cmake/3.29.3
