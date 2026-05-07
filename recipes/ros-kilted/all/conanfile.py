@@ -276,7 +276,9 @@ class Ros2KiltedConan(ConanFile):
             self.requires("freetype/2.13.2")
             self.requires("libcurl/8.5.0")
             self.requires("openjpeg/2.5.2", override=True)
-            self.requires("qt/5.15.18")
+            # Default qt/*:shared=False is static-only (no qwindows.dll under plugins/);
+            # RViz/Qt QPA still loads platform plugins at runtime → require shared Qt.
+            self.requires("qt/5.15.18", options={"shared": True})
             # OGRE is built by rviz_ogre_vendor from upstream sources; zlib/freetype are
             # find_package'd on Windows (patched) and supplied via Conan with the colcon toolchain.
 
@@ -455,6 +457,20 @@ class Ros2KiltedConan(ConanFile):
         self.runenv_info.define("ROS_VERSION", "2")
         self.runenv_info.define("ROS_PYTHON_VERSION", "3")
         self.runenv_info.prepend_path("COLCON_PREFIX_PATH", p)
+
+        # ConanCenter qt exposes plugins under <prefix>/plugins but does not set
+        # QT_PLUGIN_PATH; without it rviz2/rqt fail (e.g. "Could not find the Qt
+        # platform plugin \"windows\"" on MSVC builds).
+        if str(self.options.variant) in ("desktop", "desktop_full"):
+            try:
+                qt_dep = self.dependencies["qt"]
+            except KeyError:
+                qt_dep = None
+            if qt_dep is not None:
+                qt_plugins = os.path.join(qt_dep.package_folder, "plugins")
+                if os.path.isdir(qt_plugins):
+                    self.runenv_info.prepend_path("QT_PLUGIN_PATH", qt_plugins)
+                    self.buildenv_info.prepend_path("QT_PLUGIN_PATH", qt_plugins)
 
         # Vendors (OGRE, Gazebo CMake, mimick, …) install merged relocatable trees under
         # <prefix>/opt/<pkg>/{include,lib,bin}. Expose them for consumers (CMake, PATH).
