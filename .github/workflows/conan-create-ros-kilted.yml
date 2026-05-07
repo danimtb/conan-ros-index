@@ -72,10 +72,10 @@ jobs:
           conan remote add conan-ros "$ARTIFACTORY_URL"
           conan remote login conan-ros
 
-      - name: Build Conan dependencies
-        run: conan install --requires=ros-kilted/0.1.0 --build=~ros-kilted* --build=missing --profile=${{ matrix.profile }}
+      - name: Build ros-kilted dependencies
+        run: conan install recipes/ros-kilted/all --version=0.1.0 --build=missing --profile=${{ matrix.profile }}
 
-      - name: Upload Conan dependencies
+      - name: Upload ros-kilted dependencies
         run: conan upload "*" --all -r conan-ros
 
       - name: Conan create
