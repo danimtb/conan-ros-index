@@ -409,7 +409,7 @@ class Ros2KiltedConan(ConanFile):
         toolchain_file = os.path.join(
             self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
         variant = self._VARIANT_TARGET[str(self.options.variant)]
-        variant = "rviz2" if "desktop" in variant else variant  # FIXME: Build up to rviz2 for desktop variants
+        # variant = "rviz2" if "desktop" in variant else variant  # FIXME: Build up to rviz2 for desktop variants
         cmd = (
             f'colcon build --merge-install '
             f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
