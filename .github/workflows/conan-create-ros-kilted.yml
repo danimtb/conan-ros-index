@@ -65,8 +65,8 @@ jobs:
 
       - name: Add Artifactory Conan remote
         run: |
-          conan remote add conan-ros ${{ github.secrets.ARTIFACTORY_URL }}
-          conan remote login -p ${{ github.secrets.ARTIFACTORY_PASSWORD }} ${{ github.secrets.ARTIFACTORY_USER }}
+          conan remote add conan-ros ${{ secrets.ARTIFACTORY_URL }}
+          conan remote login -p ${{ secrets.ARTIFACTORY_PASSWORD }} ${{ secrets.ARTIFACTORY_USER }}
 
       - name: Build Conan dependencies
         run: conan install --requires=ros-kilted/0.1.0 --build=~ros-kilted* --build=missing --profile=${{ matrix.profile }}
