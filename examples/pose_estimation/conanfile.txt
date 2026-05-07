@@ -12,7 +12,6 @@ ffmpeg/*:with_libwebp=False
 [generators]
 CMakeDeps
 CMakeToolchain
-ROSEnv
 VCVars
 
 [layout]
