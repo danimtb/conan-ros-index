@@ -23,3 +23,5 @@ patches:
       patch_description: rviz_ogre_vendor - forward CMP0091 and CMAKE_MSVC_RUNTIME_LIBRARY into OGRE ExternalProject (Codec_Assimp LNK2038)
     - patch_file: patches/0007-rviz-ogre-vendor-extras-conan-zlib-windows.patch
       patch_description: rviz_ogre_vendor-extras - drop unused FREETYPE_HOME/ZLIB_HOME; freetype via CONFIG (no vendored freetype_DIR); Freetype::Freetype + ZLIB::ZLIB for Conan
+    - patch_file: patches/0008-python-orocos-kdl-vendor-prefer-conan-pykdl.patch
+      patch_description: python_orocos_kdl_vendor - prefer Conan python_orocos_kdl package over import probe/FetchContent rebuild

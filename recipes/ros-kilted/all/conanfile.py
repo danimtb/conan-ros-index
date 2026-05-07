@@ -210,7 +210,7 @@ class Ros2KiltedConan(ConanFile):
     url = "https://docs.ros.org/en/kilted/"
     description = "ROS 2 Kilted merged install from source, dependencies via Conan + PyEnv."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"variant": ["core", "base", "desktop", "desktop_full"]}
+    options = {"variant": ["core", "base", "rviz2", "desktop", "desktop_full"]}
     default_options = {"variant": "core"}
 
     # ros2/variants metapackages. core/base prefixed with `ros_`; desktop variants not.
@@ -219,6 +219,7 @@ class Ros2KiltedConan(ConanFile):
     _VARIANT_TARGET = {
         "core": "ros_core",
         "base": "ros_base",
+        "rviz2": "rviz2",
         "desktop": "desktop",
         "desktop_full": "desktop_full",
     }
@@ -270,7 +271,7 @@ class Ros2KiltedConan(ConanFile):
             self.requires("orocos_kdl/1.5.1")
             self.requires("python_orocos_kdl/1.5.1")
 
-        if variant in ("desktop", "desktop_full"):
+        if variant in ("rviz2", "desktop", "desktop_full"):
             self.requires("opencv/4.9.0")
             self.requires("assimp/5.3.1")
             self.requires("freetype/2.13.2")
@@ -409,7 +410,6 @@ class Ros2KiltedConan(ConanFile):
         toolchain_file = os.path.join(
             self.generators_folder, CMakeToolchain.filename).replace("\\", "/")
         variant = self._VARIANT_TARGET[str(self.options.variant)]
-        # variant = "rviz2" if "desktop" in variant else variant  # FIXME: Build up to rviz2 for desktop variants
         cmd = (
             f'colcon build --merge-install '
             f'--cmake-args " -DCMAKE_TOOLCHAIN_FILE={toolchain_file}" '
