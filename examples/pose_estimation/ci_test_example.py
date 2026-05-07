@@ -2,7 +2,9 @@ import platform
 
 from test.examples_tools import run
 
-run("conan install -s compiler.cppstd=17 --build=missing")
+profile = "windows-msvc" if platform.system() == "Windows" else "macos-clang"
+
+run(f"conan install --profile ../../profiles/{profile} --build=missing")
 
 if platform.system() == "Windows":
     run(

@@ -25,7 +25,9 @@ if platform.system() == "Windows":
 else:
     run(shlex.join(_pip))
 
-run("conan install -s compiler.cppstd=17 --build=missing")
+profile = "windows-msvc" if platform.system() == "Windows" else "macos-clang"
+
+run(f"conan install --profile ../../profiles/{profile} --build=missing")
 
 if platform.system() == "Windows":
     cmake_py = subprocess.list2cmdline([f"-DPython3_EXECUTABLE={sys.executable}"])
