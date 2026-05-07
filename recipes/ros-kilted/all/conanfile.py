@@ -280,7 +280,7 @@ class Ros2KiltedConan(ConanFile):
         # Replaces Fast-DDS' ExternalProject of eProsima/memory. Note CCI uses
         # a hyphen in the package name; cmake_file_name is forced below so the
         # vendor's `find_package(foonathan_memory)` (underscore) still resolves.
-        self.requires("foonathan-memory/0.7.3")
+        self.requires("foonathan-memory/0.7.3", transitive_headers=True, transitive_libs=True)
         # Replaces mcap_vendor's FetchContent of foxglove/mcap.
         self.requires("mcap/1.4.1")
 
