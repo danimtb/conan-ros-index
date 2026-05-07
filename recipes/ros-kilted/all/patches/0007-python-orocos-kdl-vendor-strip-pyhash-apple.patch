@@ -1,0 +1,21 @@
+--- src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/CMakeLists.txt
++++ src/ros2/orocos_kdl_vendor/python_orocos_kdl_vendor/CMakeLists.txt
+@@ -56,6 +56,18 @@ macro(build_pykdl)
+   )
+
+   fetchcontent_makeavailable(python_orocos_kdl)
++
++  if(APPLE)
++    # libc++ on Xcode 16+ deletes std::hash<T>'s default ctor for unspecialized types.
++    # orocos_kdl/1.5.1 (Conan) headers lack std::hash specializations for KDL types,
++    # so PyKDL's `def(py::hash(py::self))` fails to compile. Strip those lines.
++    foreach(_pykdl_src "frames.cpp" "framevel.cpp")
++      file(READ "${python_orocos_kdl_SOURCE_DIR}/python_orocos_kdl/PyKDL/${_pykdl_src}" _pykdl_content)
++      string(REGEX REPLACE "[^\n]*\\.def\\(py::hash\\(py::self\\)\\)[^\n]*\n" "" _pykdl_content "${_pykdl_content}")
++      file(WRITE "${python_orocos_kdl_SOURCE_DIR}/python_orocos_kdl/PyKDL/${_pykdl_src}" "${_pykdl_content}")
++    endforeach()
++  endif()
++
+   add_subdirectory(
+     "${python_orocos_kdl_SOURCE_DIR}/python_orocos_kdl"
+     ${python_orocos_kdl_BINARY_DIR})

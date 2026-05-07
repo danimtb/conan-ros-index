@@ -210,8 +210,25 @@ class Ros2KiltedConan(ConanFile):
     url = "https://docs.ros.org/en/kilted/"
     description = "ROS 2 Kilted merged install from source, dependencies via Conan + PyEnv."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"variant": ["core", "base", "rviz2", "desktop", "desktop_full"]}
-    default_options = {"variant": "core"}
+    options = {"variant": ["core", "base", "desktop", "desktop_full"]}
+    default_options = {
+        "variant": "core",
+        # CCI ffmpeg recipe declares `avcodec.requires.append("libwebp::libwebp")` but the
+        # libwebp recipe exposes components `webp`/`webpdecoder`/...; the missing target name
+        # breaks OpenCV's CMakeDeps consumption. OpenCV links libwebp directly for image I/O
+        # so disabling FFmpeg's WebP path costs nothing for ROS desktop usage.
+        "ffmpeg/*:with_libwebp": False,
+        # Qt must be shared for rviz: the QPA platform plugin (cocoa on macOS, xcb on Linux,
+        # qwindows on Windows) is loaded at runtime from disk. With static Qt the plugin
+        # would have to be baked in via Q_IMPORT_PLUGIN, which rviz does not do, so the GUI
+        # fails with "Could not find the Qt platform plugin". Static Qt also duplicates Qt
+        # symbols across rviz_rendering/rviz_common/rviz2 binaries (objc class collisions).
+        "qt/*:shared": True,
+        # rviz_common ships its toolbar/cursor icons as SVG and loads them through
+        # QPixmap. Without the QtSvg image plugin those files silently fail with
+        # "Could not load pixmap package://rviz_common/icons/...svg".
+        "qt/*:qtsvg": True,
+    }
 
     # ros2/variants metapackages. core/base prefixed with `ros_`; desktop variants not.
     # Status: `core` builds. `base` reuses core's Conan deps (only adds ROS source pkgs).
@@ -219,7 +236,6 @@ class Ros2KiltedConan(ConanFile):
     _VARIANT_TARGET = {
         "core": "ros_core",
         "base": "ros_base",
-        "rviz2": "rviz2",
         "desktop": "desktop",
         "desktop_full": "desktop_full",
     }
@@ -261,6 +277,12 @@ class Ros2KiltedConan(ConanFile):
         #self.requires("zenoh-c/1.8.0")
         #self.requires("zenoh-cpp/1.8.0")
         self.requires("pybind11/2.11.1")
+        # Replaces Fast-DDS' ExternalProject of eProsima/memory. Note CCI uses
+        # a hyphen in the package name; cmake_file_name is forced below so the
+        # vendor's `find_package(foonathan_memory)` (underscore) still resolves.
+        self.requires("foonathan-memory/0.7.3")
+        # Replaces mcap_vendor's FetchContent of foxglove/mcap.
+        self.requires("mcap/1.4.1")
 
         # Variant-scoped requires (package_id reflects the exact dep set per variant).
         # `base` adds orocos_kdl + python_orocos_kdl so python_orocos_kdl_vendor finds PyKDL
@@ -271,7 +293,7 @@ class Ros2KiltedConan(ConanFile):
             self.requires("orocos_kdl/1.5.1")
             self.requires("python_orocos_kdl/1.5.1")
 
-        if variant in ("rviz2", "desktop", "desktop_full"):
+        if variant in ("desktop", "desktop_full"):
             self.requires("opencv/4.9.0")
             self.requires("assimp/5.3.1")
             self.requires("freetype/2.13.2")
@@ -400,6 +422,19 @@ class Ros2KiltedConan(ConanFile):
 
         apply_conandata_patches(self)
 
+        # OGRE 1.12.10's CMakeLists.txt has a buggy execute_process invocation that
+        # passes a literal shell pipe to xcodebuild, which fails on Xcode 26 (macOS
+        # 26 SDK) and corrupts CMAKE_OSX_SYSROOT. rviz_ogre_vendor consumes any
+        # patches under its `patches/` folder (PATCHES directive), so dropping our
+        # OGRE-targeting patch there gets applied to the upstream tarball before
+        # the OGRE configure runs. Copied unconditionally because Conan 2 forbids
+        # self.settings access in source(); the patched code path lives behind
+        # `elseif (APPLE AND NOT APPLE_IOS)` so it's dead code on Linux/Windows.
+        copy(self, "ogre-1.12.10-fix-macos-sysroot.patch",
+             src=os.path.join(self.export_sources_folder, "patches"),
+             dst=os.path.join(self.source_folder, "src", "ros2", "rviz",
+                              "rviz_ogre_vendor", "patches"))
+
     def build(self):
         # Pass the Conan toolchain to each colcon-invoked cmake via -D. The
         # leading space inside the value is required by colcon-cmake's
@@ -458,6 +493,19 @@ class Ros2KiltedConan(ConanFile):
         self.runenv_info.define("ROS_PYTHON_VERSION", "3")
         self.runenv_info.prepend_path("COLCON_PREFIX_PATH", p)
 
+        # ament_cmake_vendor_package isolates each vendor's libs under opt/<pkg>/lib.
+        # ROS's setup.sh sources per-vendor hooks that prepend those paths to
+        # DYLD_/LD_LIBRARY_PATH; consumers running through `conan run` do not source
+        # setup.sh, so dlopen of e.g. librviz_default_plugins (-> libgz-math) fails.
+        # Replicate the hook output directly in runenv so plugins resolve out of the box.
+        opt_dir = os.path.join(p, "opt")
+        if os.path.isdir(opt_dir):
+            for vendor in sorted(os.listdir(opt_dir)):
+                for libdir in ("lib", "lib64"):
+                    vlib = os.path.join(opt_dir, vendor, libdir)
+                    if os.path.isdir(vlib):
+                        self.runenv_info.prepend_path("DYLD_LIBRARY_PATH", vlib)
+                        self.runenv_info.prepend_path("LD_LIBRARY_PATH", vlib)
         # ConanCenter qt exposes plugins under <prefix>/plugins but does not set
         # QT_PLUGIN_PATH; without it rviz2/rqt fail (e.g. "Could not find the Qt
         # platform plugin \"windows\"" on MSVC builds).
