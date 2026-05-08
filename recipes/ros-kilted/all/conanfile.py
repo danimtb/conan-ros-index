@@ -240,6 +240,14 @@ class Ros2KiltedConan(ConanFile):
         "desktop_full": "desktop_full",
     }
 
+    def configure(self):
+        # PCL's io module links Boost::iostreams. If boost gets resolved as
+        # header-only, CMakeDeps does not generate that imported target and
+        # desktop_full fails at configure time on macOS.
+        if str(self.options.variant) == "desktop_full":
+            self.options["boost/*"].header_only = False
+            self.options["boost/*"].without_iostreams = False
+
     def layout(self):
         # Single-tree colcon workspace: src/, build/, install/, log/ under ros2_ws/
         ws = "ros2_ws"
@@ -308,7 +316,6 @@ class Ros2KiltedConan(ConanFile):
         if variant == "desktop_full":
             self.requires("pcl/1.14.1")  # built with with_vtk=False on CCI; OK for headless, not for full viz.
             # self.requires("vtk/9.x")  # Not on ConanCenter; required for PCL visualization — provide via system or custom recipe.
-            self.requires("boost/1.83.0", options={"header_only": False}, override=True)
 
     def build_requirements(self):
         self.tool_requires("cmake/3.28.5")
