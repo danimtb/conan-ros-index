@@ -29,5 +29,5 @@ patches:
       patch_description: mcap_vendor - replace FetchContent of foxglove/mcap with find_package(mcap) (CCI mcap)
     - patch_file: patches/0010-rviz-ogre-vendor-extras-conan-zlib-windows.patch
       patch_description: rviz_ogre_vendor-extras - drop unused FREETYPE_HOME/ZLIB_HOME; freetype via CONFIG (no vendored freetype_DIR); Freetype::Freetype + ZLIB::ZLIB for Conan
-    - patch_file: patches/0011-gz-utils-vendor-prepend-gz-cmake-prefix.patch
-      patch_description: gz_utils_vendor - prepend <install>/opt/gz_cmake_vendor to CMAKE_PREFIX_PATH before ament_vendor configures ExternalProject so find_package(gz-cmake4) resolves on Windows
+    - patch_file: patches/0011-gz-cmake-vendor-extras-prepend-opt-prefix.patch
+      patch_description: gz_cmake_vendor - prepend <install>/opt/gz_cmake_vendor in extras so downstream vendor ExternalProject configs can resolve find_package(gz-cmake4) on Windows
