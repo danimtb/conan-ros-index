@@ -22,7 +22,7 @@ no need for `head` post-processing, and works on every Xcode version
 +++ b/CMakeLists.txt
 @@ -271,12 +271,11 @@ elseif (EMSCRIPTEN)
  elseif (APPLE AND NOT APPLE_IOS)
-
+ 
    set(XCODE_ATTRIBUTE_SDKROOT macosx)
 -  if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
 -    execute_process(COMMAND xcodebuild -version -sdk "${XCODE_ATTRIBUTE_SDKROOT}" Path | head -n 1 OUTPUT_VARIABLE CMAKE_OSX_SYSROOT)
@@ -35,6 +35,6 @@ no need for `head` post-processing, and works on every Xcode version
 +    OUTPUT_VARIABLE CMAKE_OSX_SYSROOT
 +    OUTPUT_STRIP_TRAILING_WHITESPACE
 +  )
-
+ 
    # Make sure that the OpenGL render system is selected for non-iOS Apple builds
    set(OGRE_BUILD_RENDERSYSTEM_GLES2 FALSE)
