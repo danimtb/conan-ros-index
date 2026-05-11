@@ -258,7 +258,7 @@ class Ros2KiltedConan(ConanFile):
         # Host pins vs kilted pixi.toml: exact where CC matches; else nearest (documented here).
         # console_bridge 1.0.2 (pixi 1.0.1 — 1.0.1 not on ConanCenter). cunit/2.1-3 is CC’s id for 2.1.3.
         # graphviz/9.0.0: no Windows MSVC binary on ConanCenter from `conan list`; keep pygraphviz-only on pip.
-        self.requires("openssl/3.3.2")
+        self.requires("openssl/3.3.2", transitive_libs=True)
         self.requires("zlib/1.3.1")
         self.requires("fmt/10.2.1")
         # Temporarily off: no matching ConanCenter prebuilt for this Windows/MSVC profile (re-enable with
